@@ -1,0 +1,54 @@
+erDiagram
+  ASSET ||--o{ VERSION : "owns 1..n"
+  ASSET ||--|| CONTRACT_LIVE : "current contract"
+  VERSION ||--|| CONTRACT_SNAPSHOT : "frozen at creation"
+  VERSION ||--o{ RENDER : "rendered with inputs"
+  ASSET ||--o{ AUDIT : "history"
+  VERSION ||--o{ AUDIT : "history"
+  RENDER ||--o| AUDIT : "if save=true"
+
+  ASSET {
+    string id PK "shadow.daily-report"
+    string owner
+    string lifecycle "unregistered|active|deprecated|sunset"
+    uuid active_version_id FK
+    json variable_contract "live, mutable"
+    json model_config
+    json output_contract
+  }
+
+  VERSION {
+    uuid id PK
+    string asset_id FK
+    string version "semver"
+    string state "draft|active|previous|archived"
+    json body "system+user templates"
+    json variable_contract_snapshot "frozen"
+    string body_hash
+    string etag
+    datetime promoted_at
+  }
+
+  CONTRACT_LIVE {
+    string scope "asset-level, updates anytime"
+  }
+
+  CONTRACT_SNAPSHOT {
+    string scope "version-level, immutable"
+  }
+
+  RENDER {
+    uuid version_id FK
+    json inputs
+    text rendered_user
+    text rendered_system
+    string rendered_hash "SHA-256 proof"
+    json diagnostics "unresolved+unused"
+  }
+
+  AUDIT {
+    string event_type "asset.created|version.promoted|render.saved|..."
+    string actor
+    json payload
+    string payload_hash
+  }

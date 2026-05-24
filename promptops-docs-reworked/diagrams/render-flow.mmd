@@ -1,0 +1,16 @@
+sequenceDiagram
+  participant Client
+  participant API
+  participant RenderService
+  participant DB
+  participant Audit
+  Client->>API: POST /assets/{id}/versions/{vid}/render
+  API->>RenderService: render(versionId, inputs, save)
+  RenderService->>DB: read version body and contract snapshot
+  RenderService->>RenderService: substitute variables
+  RenderService->>RenderService: compute diagnostics and rendered_hash
+  alt save = true
+    RenderService->>Audit: record render.saved
+  end
+  API-->>Client: RenderResult
+

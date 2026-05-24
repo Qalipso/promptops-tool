@@ -1,0 +1,33 @@
+stateDiagram-v2
+  [*] --> unregistered: POST /assets (lifecycle=unregistered)
+  [*] --> active: POST /assets (default lifecycle=active)
+
+  unregistered --> active: PATCH lifecycle=active
+  active --> deprecated: PATCH lifecycle=deprecated
+  deprecated --> active: PATCH (re-activate, rare)
+  deprecated --> sunset: PATCH lifecycle=sunset
+  active --> sunset: PATCH (skip deprecated)
+  sunset --> [*]: keep for history, no new versions expected
+
+  note right of unregistered
+    Planned but not ready.
+    Versions can exist but
+    should not be promoted.
+  end note
+
+  note right of active
+    Production use allowed.
+    Versions can be created
+    and promoted normally.
+  end note
+
+  note right of deprecated
+    Still functional.
+    Discourage new integrations.
+    Existing renders still work.
+  end note
+
+  note right of sunset
+    Retired. Read-only.
+    Kept for audit and history.
+  end note

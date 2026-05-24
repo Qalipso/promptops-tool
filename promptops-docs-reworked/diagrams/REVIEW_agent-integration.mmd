@@ -1,0 +1,49 @@
+sequenceDiagram
+  autonumber
+  participant Agent
+  participant PromptOps as PromptOps API
+  participant LLM as LLM Provider
+  participant AIEval as AI Eval (separate)
+
+  Note over Agent: 1. Discovery — find or register the asset
+
+  Agent->>PromptOps: GET /assets/shadow.daily-report
+  alt asset exists
+    PromptOps-->>Agent: 200 Asset
+  else 404
+    Agent->>PromptOps: POST /assets {id, owner, contracts}
+    PromptOps-->>Agent: 201 Asset created
+    Agent->>PromptOps: POST /assets/{id}/versions {body, snapshots}
+    PromptOps-->>Agent: 201 Version (draft)
+    Agent->>PromptOps: POST /assets/{id}/versions/{vid}/promote
+    PromptOps-->>Agent: 200 Version (active)
+  end
+
+  Note over Agent: 2. Retrieve active version (most common)
+
+  Agent->>PromptOps: GET /assets/{id}/active
+  PromptOps-->>Agent: 200 Version body + contract snapshot
+
+  Note over Agent: 3. Render with runtime inputs
+
+  Agent->>PromptOps: POST /versions/{vid}/render {inputs, save:true}
+  PromptOps-->>Agent: 202 rendered_system, rendered_user, rendered_hash, diagnostics
+
+  alt diagnostics.unresolved_variables non-empty
+    Agent->>Agent: abort or fill defaults
+  end
+
+  Note over Agent: 4. Use rendered prompt with LLM
+
+  Agent->>LLM: chat.completions(rendered_system, rendered_user)
+  LLM-->>Agent: response
+
+  Note over Agent,AIEval: 5. (Optional) Forward rendered prompt + output to evaluation
+
+  Agent->>AIEval: store {rendered_hash, version_id, output}
+  AIEval-->>Agent: eval result (async)
+
+  Note over Agent: 6. Improvement loop — bump version when prompt evolves
+
+  Agent->>PromptOps: POST /versions {version: '1.1.0', body, changelog}
+  Agent->>PromptOps: POST /versions/{newVid}/promote

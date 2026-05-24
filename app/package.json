@@ -1,0 +1,25 @@
+{
+  "name": "promptops",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PromptOps — Prompt Testing & Versioning Tool",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.10"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "pnpm --filter @promptops/api db:generate",
+    "db:migrate": "pnpm --filter @promptops/api db:migrate",
+    "db:seed": "pnpm --filter @promptops/api db:seed"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
+  }
+}

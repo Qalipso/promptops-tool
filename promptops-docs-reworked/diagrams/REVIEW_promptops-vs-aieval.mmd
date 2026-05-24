@@ -1,0 +1,34 @@
+flowchart LR
+  subgraph PromptOps["PromptOps — Storage Layer"]
+    direction TB
+    P1[Asset Registry]
+    P2[Version Control]
+    P3[Template Rendering]
+    P4[Audit Log]
+    P1 --> P2 --> P3 --> P4
+  end
+
+  subgraph Boundary["✄ Hard boundary — no LLM, no scoring"]
+    B[Rendered Prompt + Hash]
+  end
+
+  subgraph AIEval["AI Eval — Quality Layer"]
+    direction TB
+    E1[Golden Datasets]
+    E2[LLM-as-Judge]
+    E3[Rubric Scoring]
+    E4[Regression Tests]
+    E5[Pairwise Comparison]
+  end
+
+  PromptOps -->|exports rendered text| Boundary
+  Boundary -->|feeds evaluation runs| AIEval
+  AIEval -.->|optional: block promotion if checks fail| PromptOps
+
+  style PromptOps fill:#1e3a5f,stroke:#3b82f6,color:#fff
+  style AIEval fill:#3f1e5f,stroke:#a855f7,color:#fff
+  style Boundary fill:#1f2937,stroke:#6b7280,color:#fff,stroke-dasharray: 5 5
+
+  classDef out fill:#7f1d1d,stroke:#dc2626,color:#fff
+  X1["NOT in PromptOps:<br/>model calls, scoring,<br/>datasets, red teaming"]:::out
+  PromptOps -. excludes .-> X1

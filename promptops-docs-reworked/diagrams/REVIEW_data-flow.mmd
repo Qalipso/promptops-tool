@@ -1,0 +1,45 @@
+flowchart TD
+  subgraph T0["t0 — Asset created"]
+    A0[Asset shadow.daily-report] --> AC[asset.variable_contract<br/>journal_entries:string<br/>language:enum]
+  end
+
+  subgraph T1["t1 — Version 1.0.0 drafted"]
+    V1[Version 1.0.0<br/>state=draft]
+    BODY1[body.system: 'You are Shadow…'<br/>body.user: 'Report from {{journal_entries}} in {{language}}']
+    SNAP1[variable_contract_snapshot<br/>= asset.variable_contract @ t1]
+    HASH1[body_hash + etag computed]
+    V1 --> BODY1 & SNAP1 & HASH1
+  end
+
+  subgraph T2["t2 — Promoted"]
+    V1A[Version 1.0.0<br/>state=active]
+    AVR[asset.active_version_id → V1]
+    AUD1[audit: version.promoted]
+  end
+
+  subgraph T3["t3 — Render with inputs"]
+    IN[inputs:<br/>journal_entries='I slept badly…'<br/>language='English']
+    SUB[substitute {{vars}}<br/>using snapshot validation]
+    OUT[rendered_user: 'Report from I slept badly… in English'<br/>rendered_hash: sha256:...]
+    DIAG[diagnostics:<br/>unresolved=[]<br/>unused=[]]
+    IN --> SUB --> OUT & DIAG
+  end
+
+  subgraph T4["t4 — Asset contract evolves (added 'tone' var)"]
+    AC2[asset.variable_contract<br/>+ tone:enum]
+    NOTE[V1 snapshot UNCHANGED<br/>old renders still reproducible]
+    AC2 --> NOTE
+  end
+
+  T0 --> T1 --> T2 --> T3
+  T2 --> T4
+
+  AC -. copied @ t1 .-> SNAP1
+  V1A -. read for render .-> SUB
+  SNAP1 -. validates against .-> SUB
+
+  style T0 fill:#1e3a5f,color:#fff
+  style T1 fill:#3b2f5f,color:#fff
+  style T2 fill:#1e5f3a,color:#fff
+  style T3 fill:#5f4e1e,color:#fff
+  style T4 fill:#5f1e3a,color:#fff

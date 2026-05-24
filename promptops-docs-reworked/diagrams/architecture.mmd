@@ -1,0 +1,13 @@
+flowchart TB
+  Client[Client / Agent / Admin UI] --> API[PromptOps API]
+  API --> Auth[Bearer Token Auth]
+  API --> AssetService[Asset Service]
+  API --> VersionService[Version Service]
+  API --> RenderService[Render Service]
+  API --> AuditService[Audit Service]
+  AssetService --> DB[(Database)]
+  VersionService --> DB
+  RenderService --> DB
+  AuditService --> DB
+  RenderService -. no LLM call .-> NoLLM[Template substitution only]
+

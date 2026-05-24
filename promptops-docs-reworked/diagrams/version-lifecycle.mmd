@@ -1,0 +1,8 @@
+stateDiagram-v2
+  [*] --> draft
+  draft --> active: promote
+  active --> previous: new version promoted
+  previous --> active: rollback
+  draft --> archived: archive
+  previous --> archived: archive
+
