@@ -3,8 +3,12 @@
  * Never runs in the browser — all pages are Server Components.
  *
  * PromptOps stores prompt versions. AI Eval scores model outputs.
+ *
+ * DEMO_MODE=true → return mock fixtures, no real API needed.
  */
+import * as mock from './mock-data';
 
+const DEMO = process.env.DEMO_MODE === 'true';
 const API_URL = process.env.PROMPTOPS_API_URL ?? 'http://localhost:3013';
 const TOKEN = process.env.PROMPTOPS_API_TOKEN ?? '';
 
@@ -144,16 +148,45 @@ export interface AuditEvent {
 // ── Fetchers ──────────────────────────────────────────────────────────────────
 
 export const api = {
-  assets: () => apiFetch<Asset[]>('/api/v0/assets'),
-  asset: (id: string) => apiFetch<Asset>(`/api/v0/assets/${id}`),
-  stats: (id: string) => apiFetch<AssetStats>(`/api/v0/assets/${id}/stats`),
-  versions: (id: string) => apiFetch<Version[]>(`/api/v0/assets/${id}/versions`),
-  version: (id: string, vid: string) => apiFetch<Version>(`/api/v0/assets/${id}/versions/${vid}`),
+  assets: () =>
+    DEMO ? Promise.resolve(mock.MOCK_ASSETS) : apiFetch<Asset[]>('/api/v0/assets'),
+  asset: (id: string) =>
+    DEMO
+      ? Promise.resolve(mock.MOCK_ASSETS.find((a) => a.id === id) ?? null).then((a) => {
+          if (!a) throw new Error('not found');
+          return a;
+        })
+      : apiFetch<Asset>(`/api/v0/assets/${id}`),
+  stats: (id: string) =>
+    DEMO
+      ? Promise.resolve(mock.MOCK_STATS[id] ?? null)
+      : apiFetch<AssetStats>(`/api/v0/assets/${id}/stats`),
+  versions: (id: string) =>
+    DEMO
+      ? Promise.resolve(mock.MOCK_VERSIONS[id] ?? [])
+      : apiFetch<Version[]>(`/api/v0/assets/${id}/versions`),
+  version: (id: string, vid: string) =>
+    DEMO
+      ? Promise.resolve((mock.MOCK_VERSIONS[id] ?? []).find((v) => v.id === vid) ?? null).then(
+          (v) => {
+            if (!v) throw new Error('not found');
+            return v;
+          },
+        )
+      : apiFetch<Version>(`/api/v0/assets/${id}/versions/${vid}`),
   render: (id: string, vid: string, body: { inputs?: Record<string, unknown>; save?: boolean }) =>
-    apiPost<RenderResult>(`/api/v0/assets/${id}/versions/${vid}/render`, body),
-  auditEvents: (id: string) => apiFetch<AuditEvent[]>(`/api/v0/assets/${id}/audit`),
+    DEMO
+      ? Promise.resolve(mock.MOCK_RENDER)
+      : apiPost<RenderResult>(`/api/v0/assets/${id}/versions/${vid}/render`, body),
+  auditEvents: (id: string) =>
+    DEMO
+      ? Promise.resolve(mock.MOCK_AUDIT[id] ?? [])
+      : apiFetch<AuditEvent[]>(`/api/v0/assets/${id}/audit`),
   updateAsset: (
     id: string,
     body: { description?: string; tags?: string[]; lifecycle?: Asset['lifecycle'] },
-  ) => apiPatch<Asset>(`/api/v0/assets/${id}`, body),
+  ) =>
+    DEMO
+      ? Promise.reject(new Error('Read-only in demo mode'))
+      : apiPatch<Asset>(`/api/v0/assets/${id}`, body),
 };
