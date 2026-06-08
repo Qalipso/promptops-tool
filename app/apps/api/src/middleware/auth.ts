@@ -11,12 +11,19 @@ const BEARER_PREFIX = 'Bearer ';
 export const tokenAuth: MiddlewareHandler<{
   Variables: { actor: string };
 }> = async (c, next) => {
+  // Local single-user mode: no auth, actor = "local".
+  if (env.PROMPTOPS_LOCAL) {
+    c.set('actor', 'local');
+    await next();
+    return;
+  }
+
   const header = c.req.header('authorization');
   if (!header || !header.startsWith(BEARER_PREFIX)) {
     throw errors.unauthorized();
   }
   const presented = header.slice(BEARER_PREFIX.length).trim();
-  if (!constantTimeEq(presented, env.PROMPTOPS_API_TOKEN)) {
+  if (!constantTimeEq(presented, env.PROMPTOPS_API_TOKEN ?? '')) {
     throw errors.unauthorized();
   }
   // Single-user MVP: actor is hardcoded. V1 introduces multi-user tokens.

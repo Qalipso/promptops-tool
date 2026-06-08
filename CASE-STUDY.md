@@ -54,6 +54,18 @@ PromptAsset
 
 ---
 
+## What Actually Shipped (and the pivot)
+
+The case above is the product thesis. Here is the honest state of the implementation, including a deliberate mid-project pivot:
+
+- **Pivot: Postgres → SQLite, cloud → local-first.** The original build used Hono + Drizzle + **PostgreSQL** with Bearer auth — overkill for the real user (a single engineer managing their own prompts). I migrated the dialect to **SQLite (better-sqlite3)**, added a local-mode auth bypass (`actor = local`), and a one-command `pnpm start:local`. The tool now runs with zero infrastructure and stores prompts in `~/.promptops/promptops.db`. Drizzle made the dialect swap mechanical; the `sql\`now()\`` → `new Date()` and `db.execute` → query-builder changes were the only friction.
+- **Built:** registry + semantic versioning, content-hash identity, draft→active→previous→archived lifecycle, template render (no LLM), line + structured **diff**, append-only **audit log**, **rollback**, a zero-dependency **CLI**, git-friendly YAML **export/import**, and a guided 8-step **Agent Builder** (added as a module — a conscious expansion of the original "no builder" non-goal, documented in the brief).
+- **Eval, honestly scoped:** PromptOps does **not** run LLM test suites. The deterministic-test-runner described above became a leaner contract — PromptOps **ingests** an eval results `.txt` from an external evaluator, parses it, and stores it. Running evals is a different tool's job; PromptOps owns the prompt lifecycle and the evidence trail.
+- **Quality:** pure logic (compile, diff, test-gen, eval-parse, template engine) lives in unit-tested packages; **109+ tests** across api/cli/web/packages, 0 type errors, biome lint, and GitHub Actions CI with a coverage gate on the core packages.
+- **Not built (deliberately deferred):** runtime SDK (`getActiveVersion()` as a package), multi-user RBAC, and LLM-judge soft-regression detection. These are real V1+ items, not gaps in the thesis.
+
+---
+
 ## User Flow
 
 A typical prompt iteration cycle:
@@ -79,7 +91,7 @@ If variable validation happens inside the LLM call, you discover a missing varia
 
 ### Why a pnpm monorepo (Hono API + Next.js UI)
 
-The API and UI have different deployment and scaling concerns. The API needs to be accessible to a runtime SDK; the UI is a management console. A monorepo with shared types (`packages/types`) ensures the API response shape and the UI's TypeScript types are always in sync without a code generation step.
+The API and UI have different deployment and scaling concerns. The API needs to be accessible to a runtime SDK; the UI is a management console. A monorepo with shared types (`packages/domain`, plus pure-logic packages `packages/diff` and `packages/builder`) keeps the API, CLI, and UI in sync without a code generation step.
 
 ### Why Hono instead of Express
 
@@ -87,7 +99,7 @@ Hono runs on edge runtimes (Cloudflare Workers, Vercel Edge) without modificatio
 
 ### Why Drizzle instead of Prisma
 
-Schema is expressed in TypeScript, not in a separate DSL. There is no code generation step and no `npx prisma generate` to forget in CI. Query results are typed to the schema definition, not inferred from a generated client. For a project where the data model evolves frequently, the edit-save-run loop is meaningfully faster.
+Schema is expressed in TypeScript, not in a separate DSL. There is no code generation step and no `npx prisma generate` to forget in CI. Query results are typed to the schema definition, not inferred from a generated client. For a project where the data model evolves frequently, the edit-save-run loop is meaningfully faster — and when I pivoted the DB from Postgres to SQLite, Drizzle made it a mechanical `pg-core` → `sqlite-core` swap rather than a rewrite.
 
 ### Why the web UI is a management console, not the primary interface
 

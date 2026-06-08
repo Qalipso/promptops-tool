@@ -1,11 +1,31 @@
-import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
+import type { BuilderSpec } from '@promptops/builder';
+import { Hono } from 'hono';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { z } from 'zod';
 import { createAsset, getAsset, listAssets, updateAsset } from '../services/asset-repo.js';
-import { archiveVersion, createVersion, getActiveVersion, getVersion, listVersions, promoteVersion, rollbackVersion } from '../services/version-repo.js';
-import { renderVersion } from '../services/render-service.js';
 import { getAssetStats, listAuditEvents } from '../services/audit.js';
-import type { ContentfulStatusCode } from 'hono/utils/http-status';
+import {
+  compile,
+  createTestCase,
+  deleteTestCase,
+  generateTestCasesForAsset,
+  getBuilderSpec,
+  importEval,
+  listEvalImports,
+  listTestCases,
+  saveBuilderSpec,
+} from '../services/builder-service.js';
+import { renderVersion } from '../services/render-service.js';
+import {
+  archiveVersion,
+  createVersion,
+  getActiveVersion,
+  getVersion,
+  listVersions,
+  promoteVersion,
+  rollbackVersion,
+} from '../services/version-repo.js';
 
 type Vars = { Variables: { actor: string } };
 
@@ -84,10 +104,15 @@ router.patch('/:id', zValidator('json', UpdateAssetBody), async (c) => {
 const CreateVersionBody = z.object({
   version: z.string().min(1),
   parent_version_id: z.string().uuid().optional(),
-  body: z.object({
-    system: z.string().nullable().optional(),
-    user: z.string().min(1),
-  }),
+  body: z
+    .object({
+      system: z.string().nullable().optional(),
+      developer: z.string().nullable().optional(),
+      user: z.string().min(1),
+      tools: z.array(z.unknown()).optional(),
+      output_schema: z.unknown().optional(),
+    })
+    .passthrough(),
   variable_contract_snapshot: z.unknown(),
   model_config_snapshot: z.unknown(),
   output_contract_snapshot: z.unknown(),
@@ -199,6 +224,76 @@ router.get('/:id/audit', async (c) => {
 router.get('/:id/stats', async (c) => {
   await getAsset(c.req.param('id')); // 404 guard
   const data = await getAssetStats(c.req.param('id'));
+  return c.json({ success: true, data });
+});
+
+// ─── Builder (wizard) ─────────────────────────────────────────────────────────
+
+// Spec is free-form JSON validated structurally by @promptops/builder consumers.
+const SpecBody = z.object({ spec: z.record(z.unknown()) });
+
+router.get('/:id/builder-spec', async (c) => {
+  const data = await getBuilderSpec(c.req.param('id'));
+  return c.json({ success: true, data });
+});
+
+router.put('/:id/builder-spec', zValidator('json', SpecBody), async (c) => {
+  const actor = c.get('actor');
+  const { spec } = c.req.valid('json');
+  const data = await saveBuilderSpec(c.req.param('id'), spec as unknown as BuilderSpec, actor);
+  return c.json({ success: true, data });
+});
+
+router.post('/:id/compile', zValidator('json', SpecBody), async (c) => {
+  const { spec } = c.req.valid('json');
+  const data = compile(spec as unknown as BuilderSpec);
+  return c.json({ success: true, data });
+});
+
+router.get('/:id/test-cases', async (c) => {
+  const data = await listTestCases(c.req.param('id'));
+  return c.json({ success: true, data });
+});
+
+const TestCaseBody = z.object({
+  name: z.string().min(1),
+  input: z.record(z.unknown()),
+  note: z.string().optional(),
+  source: z.string().optional(),
+});
+
+router.post('/:id/test-cases', zValidator('json', TestCaseBody), async (c) => {
+  const actor = c.get('actor');
+  const data = await createTestCase(c.req.param('id'), c.req.valid('json'), actor);
+  return c.json({ success: true, data }, 201 as ContentfulStatusCode);
+});
+
+router.post('/:id/test-cases/generate', async (c) => {
+  const actor = c.get('actor');
+  const data = await generateTestCasesForAsset(c.req.param('id'), actor);
+  return c.json({ success: true, data }, 201 as ContentfulStatusCode);
+});
+
+router.delete('/:id/test-cases/:tid', async (c) => {
+  const actor = c.get('actor');
+  await deleteTestCase(c.req.param('id'), c.req.param('tid'), actor);
+  return c.json({ success: true, data: null });
+});
+
+const EvalImportBody = z.object({
+  raw: z.string().min(1),
+  filename: z.string().optional(),
+  version_id: z.string().optional(),
+});
+
+router.post('/:id/eval-import', zValidator('json', EvalImportBody), async (c) => {
+  const actor = c.get('actor');
+  const data = await importEval(c.req.param('id'), c.req.valid('json'), actor);
+  return c.json({ success: true, data }, 201 as ContentfulStatusCode);
+});
+
+router.get('/:id/eval-imports', async (c) => {
+  const data = await listEvalImports(c.req.param('id'));
   return c.json({ success: true, data });
 });
 

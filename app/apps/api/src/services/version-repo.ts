@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '../db/client.js';
-import { assets, versions, type VersionInsert, type VersionRow } from '../db/schema.js';
+import { type VersionInsert, type VersionRow, assets, versions } from '../db/schema.js';
 import { errors } from '../lib/errors.js';
 import { writeAudit } from './audit.js';
 
@@ -59,10 +59,7 @@ export interface CreateVersionInput {
   author: string;
 }
 
-export async function createVersion(
-  data: CreateVersionInput,
-  actor: string,
-): Promise<VersionRow> {
+export async function createVersion(data: CreateVersionInput, actor: string): Promise<VersionRow> {
   // Only one draft per asset
   const existing_draft = await getDraftVersion(data.asset_id);
   if (existing_draft) {
@@ -77,7 +74,8 @@ export async function createVersion(
     .from(versions)
     .where(and(eq(versions.asset_id, data.asset_id), eq(versions.version, data.version)))
     .limit(1);
-  if (dup) throw errors.conflict(`Version '${data.version}' already exists for asset '${data.asset_id}'`);
+  if (dup)
+    throw errors.conflict(`Version '${data.version}' already exists for asset '${data.asset_id}'`);
 
   const body_hash = hashBody(data.body);
   const etag = makeEtag(body_hash, data.version);
@@ -111,10 +109,7 @@ export async function createVersion(
 }
 
 /** Promotes a draft to active. Previous active → previous. */
-export async function promoteVersion(
-  version_id: string,
-  actor: string,
-): Promise<VersionRow> {
+export async function promoteVersion(version_id: string, actor: string): Promise<VersionRow> {
   const row = await getVersion(version_id);
 
   if (row.state !== 'draft') {
@@ -128,16 +123,17 @@ export async function promoteVersion(
     .where(and(eq(versions.asset_id, row.asset_id), eq(versions.state, 'active')));
 
   // Promote this draft → active
+  const now = new Date();
   const [promoted] = await db
     .update(versions)
-    .set({ state: 'active', promoted_at: sql`now()` })
+    .set({ state: 'active', promoted_at: now })
     .where(eq(versions.id, version_id))
     .returning();
 
   // Update asset's active_version_id
   await db
     .update(assets)
-    .set({ active_version_id: version_id, updated_at: sql`now()` })
+    .set({ active_version_id: version_id, updated_at: now })
     .where(eq(assets.id, row.asset_id));
 
   await writeAudit({
@@ -179,16 +175,17 @@ export async function rollbackVersion(
     .where(and(eq(versions.asset_id, asset_id), eq(versions.state, 'active')));
 
   // Re-activate the previous version
+  const now = new Date();
   const [restored] = await db
     .update(versions)
-    .set({ state: 'active', promoted_at: sql`now()` })
+    .set({ state: 'active', promoted_at: now })
     .where(eq(versions.id, previous.id))
     .returning();
 
   // Update asset pointer
   await db
     .update(assets)
-    .set({ active_version_id: previous.id, updated_at: sql`now()` })
+    .set({ active_version_id: previous.id, updated_at: now })
     .where(eq(assets.id, asset_id));
 
   await writeAudit({
@@ -203,14 +200,11 @@ export async function rollbackVersion(
 }
 
 /** Archives any non-draft version. */
-export async function archiveVersion(
-  version_id: string,
-  actor: string,
-): Promise<VersionRow> {
+export async function archiveVersion(version_id: string, actor: string): Promise<VersionRow> {
   const row = await getVersion(version_id);
 
   if (row.state === 'draft') {
-    throw errors.badRequest(`Draft versions cannot be archived directly. Delete them instead.`);
+    throw errors.badRequest('Draft versions cannot be archived directly. Delete them instead.');
   }
   if (row.state === 'archived') {
     throw errors.badRequest(`Version '${version_id}' is already archived.`);

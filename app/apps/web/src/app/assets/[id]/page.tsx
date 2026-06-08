@@ -1,17 +1,17 @@
-import { api, type Version } from '@/lib/api';
+import { Badge, Card, CodeBlock, stateTone } from '@/components/ui';
+import { type Version, api } from '@/lib/api';
+import { IS_DEMO } from '@/lib/demo';
 import { notFound } from 'next/navigation';
 import { EditAssetForm } from './EditAssetForm';
 
-function StateBadge({ state }: { state: Version['state'] }) {
-  const colors: Record<Version['state'], string> = {
-    draft: 'bg-blue-900 text-blue-300',
-    active: 'bg-emerald-900 text-emerald-300',
-    previous: 'bg-gray-800 text-gray-400',
-    archived: 'bg-gray-900 text-gray-600',
-  };
-  return <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors[state]}`}>{state}</span>;
+function Meta({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-[11px] uppercase tracking-wide text-muted/70">{label}</dt>
+      <dd className="text-sm text-text mt-0.5">{value}</dd>
+    </div>
+  );
 }
-
 
 export default async function AssetPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -28,116 +28,152 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
   const sortedVersions = [...versions].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
-
   const activeVersion = versions.find((v) => v.state === 'active');
   const draftVersion = versions.find((v) => v.state === 'draft');
+  const enc = encodeURIComponent(assetId);
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2 text-gray-500 text-xs mb-1">
+        <div className="flex items-center gap-2 text-muted text-xs mb-2">
           <a href="/">assets</a>
-          <span>/</span>
-          <span className="text-gray-300">{asset.id}</span>
+          <span className="text-muted/50">/</span>
+          <span className="text-text font-mono">{asset.id}</span>
         </div>
 
         <EditAssetForm asset={asset} />
 
-        <div className="grid grid-cols-2 gap-x-8 gap-y-1 mt-3 text-xs max-w-sm">
-          <span className="text-gray-500">owner</span>
-          <span className="text-gray-300">{asset.owner}</span>
-          <span className="text-gray-500">versions</span>
-          <span className="text-gray-300">{stats?.version_count ?? versions.length}</span>
-          {asset.tags.length > 0 && (
-            <>
-              <span className="text-gray-500">tags</span>
-              <span className="text-gray-300">{asset.tags.join(', ')}</span>
-            </>
-          )}
-          <span className="text-gray-500">created</span>
-          <span className="text-gray-300">{new Date(asset.created_at).toLocaleDateString()}</span>
-          {stats?.last_rendered_at && (
-            <>
-              <span className="text-gray-500">last rendered</span>
-              <span className="text-gray-300">{new Date(stats.last_rendered_at).toLocaleDateString()}</span>
-            </>
-          )}
-        </div>
+        <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5">
+          <Meta label="Owner" value={asset.owner} />
+          <Meta label="Versions" value={String(stats?.version_count ?? versions.length)} />
+          <Meta label="Created" value={new Date(asset.created_at).toLocaleDateString()} />
+          <Meta
+            label="Last rendered"
+            value={
+              stats?.last_rendered_at ? new Date(stats.last_rendered_at).toLocaleDateString() : '—'
+            }
+          />
+        </dl>
 
-        <div className="flex gap-4 mt-4 text-xs">
-          <a href={`/assets/${encodeURIComponent(assetId)}/audit`} className="text-gray-500 hover:text-gray-300">
-            audit log
+        {asset.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {asset.tags.map((t) => (
+              <span
+                key={t}
+                className="text-xs text-accent/80 bg-accent-soft rounded-full px-2 py-0.5"
+              >
+                #{t}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className="flex gap-4 mt-5 text-xs">
+          <a href={`/assets/${enc}/audit`} className="text-muted hover:text-text transition-colors">
+            Audit log
           </a>
-          <a href={`/assets/${encodeURIComponent(assetId)}/versions/new`} className="text-gray-500 hover:text-gray-300">
-            + new version
-          </a>
+          {!IS_DEMO && (
+            <a
+              href={`/assets/${enc}/versions/new`}
+              className="text-accent hover:opacity-80 transition-opacity"
+            >
+              + New version
+            </a>
+          )}
+          {versions.length >= 2 && (
+            <a
+              href={`/assets/${enc}/diff`}
+              className="text-muted hover:text-text transition-colors"
+            >
+              Compare versions
+            </a>
+          )}
         </div>
       </div>
 
       {/* Active prompt preview */}
       {activeVersion && (
-        <section className="bg-gray-900 border border-emerald-800/40 rounded-lg px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-emerald-400 text-xs font-medium">Active prompt — v{activeVersion.version}</span>
-            <a href={`/assets/${encodeURIComponent(assetId)}/versions/${activeVersion.id}`} className="text-xs text-gray-500 hover:text-gray-300">
-              view full
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-surface-2/50">
+            <span className="text-success text-xs font-medium">
+              Active · v{activeVersion.version}
+            </span>
+            <a
+              href={`/assets/${enc}/versions/${activeVersion.id}`}
+              className="text-xs text-muted hover:text-text transition-colors"
+            >
+              View full →
             </a>
           </div>
-          {activeVersion.body.system && (
-            <div className="mb-2">
-              <p className="text-gray-600 text-xs mb-1">system</p>
-              <p className="text-gray-400 text-xs line-clamp-3 font-mono whitespace-pre-wrap">{activeVersion.body.system}</p>
+          <div className="p-4 space-y-3">
+            {activeVersion.body.system && (
+              <div>
+                <p className="text-muted text-[11px] uppercase tracking-wide mb-1">system</p>
+                <CodeBlock className="line-clamp-3">{activeVersion.body.system}</CodeBlock>
+              </div>
+            )}
+            <div>
+              <p className="text-muted text-[11px] uppercase tracking-wide mb-1">user</p>
+              <CodeBlock className="line-clamp-4">{activeVersion.body.user}</CodeBlock>
             </div>
-          )}
-          <div>
-            {activeVersion.body.system && <p className="text-gray-600 text-xs mb-1">user</p>}
-            <p className="text-gray-400 text-xs line-clamp-4 font-mono whitespace-pre-wrap">{activeVersion.body.user}</p>
           </div>
-        </section>
+        </Card>
       )}
 
       {/* Draft notice */}
       {draftVersion && (
-        <div className="bg-blue-950 border border-blue-800 rounded-lg px-4 py-2 flex items-center justify-between">
-          <span className="text-blue-300 text-xs">Draft v{draftVersion.version} pending — not yet promoted</span>
-          <a href={`/assets/${encodeURIComponent(assetId)}/versions/${draftVersion.id}`} className="text-xs text-blue-400 hover:text-blue-300">
-            review
+        <div className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 flex items-center justify-between">
+          <span className="text-warning text-xs">
+            Draft v{draftVersion.version} pending — not yet promoted
+          </span>
+          <a
+            href={`/assets/${enc}/versions/${draftVersion.id}`}
+            className="text-xs text-warning hover:opacity-80 transition-opacity font-medium"
+          >
+            Review →
           </a>
         </div>
       )}
 
       {/* Versions */}
       <section>
-        <h2 className="text-sm font-semibold text-gray-300 mb-3">
-          Versions <span className="text-gray-600 font-normal">({versions.length})</span>
+        <h2 className="text-sm font-semibold text-text mb-3">
+          Versions <span className="text-muted font-normal">({versions.length})</span>
         </h2>
         {sortedVersions.length === 0 ? (
-          <p className="text-gray-600 text-xs">No versions yet.</p>
+          <p className="text-muted text-xs">No versions yet.</p>
         ) : (
           <div className="space-y-2">
             {sortedVersions.map((v) => (
               <a
                 key={v.id}
-                href={`/assets/${encodeURIComponent(assetId)}/versions/${v.id}`}
-                className="block bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 hover:border-gray-600 transition-colors no-underline"
+                href={`/assets/${enc}/versions/${v.id}`}
+                className="no-underline group block"
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-white font-medium">v{v.version}</span>
-                    {v.changelog && (
-                      <p className="text-gray-400 text-xs mt-0.5 truncate max-w-lg">{v.changelog}</p>
-                    )}
-                    <p className="text-gray-600 text-xs mt-0.5">
-                      by {v.author} · {new Date(v.created_at).toLocaleDateString()}
-                      {v.promoted_at && ` · promoted ${new Date(v.promoted_at).toLocaleDateString()}`}
-                    </p>
+                <Card hover className="px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <span className="text-text font-medium font-mono group-hover:text-accent transition-colors">
+                        v{v.version}
+                      </span>
+                      {v.changelog && (
+                        <p className="text-muted text-xs mt-0.5 truncate max-w-lg">{v.changelog}</p>
+                      )}
+                      <p className="text-muted/70 text-xs mt-0.5">
+                        by {v.author} · {new Date(v.created_at).toLocaleDateString()}
+                        {v.promoted_at &&
+                          ` · promoted ${new Date(v.promoted_at).toLocaleDateString()}`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-muted/60 text-xs font-mono hidden sm:inline">
+                        {v.etag}
+                      </span>
+                      <Badge tone={stateTone(v.state)}>{v.state}</Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-600 text-xs font-mono">{v.etag}</span>
-                    <StateBadge state={v.state} />
-                  </div>
-                </div>
+                </Card>
               </a>
             ))}
           </div>

@@ -20,15 +20,13 @@ const MAX_LINES = 500;
 function lcsTable(a: string[], b: string[]): number[][] {
   const m = a.length;
   const n = b.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, () =>
-    new Array<number>(n + 1).fill(0),
-  );
+  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0));
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
       if (a[i - 1] === b[j - 1]) {
-        dp[i]![j] = (dp[i - 1]![j - 1] ?? 0) + 1;
+        dp[i]![j] = (dp[i - 1]?.[j - 1] ?? 0) + 1;
       } else {
-        dp[i]![j] = Math.max(dp[i - 1]![j] ?? 0, dp[i]![j - 1] ?? 0);
+        dp[i]![j] = Math.max(dp[i - 1]?.[j] ?? 0, dp[i]?.[j - 1] ?? 0);
       }
     }
   }
@@ -56,7 +54,7 @@ function backtrack(
   } else if (a[i - 1] === b[j - 1]) {
     backtrack(dp, a, b, i - 1, j - 1, out);
     out.push({ type: 'equal', text: a[i - 1]! });
-  } else if ((dp[i - 1]![j] ?? 0) >= (dp[i]![j - 1] ?? 0)) {
+  } else if ((dp[i - 1]?.[j] ?? 0) >= (dp[i]?.[j - 1] ?? 0)) {
     backtrack(dp, a, b, i - 1, j, out);
     out.push({ type: 'remove', text: a[i - 1]! });
   } else {
@@ -91,14 +89,9 @@ export function diffLines(a: string, b: string): DiffLine[] {
  * Collapse runs of 'equal' lines longer than `context` into a single placeholder.
  * context = how many equal lines to keep before/after a change block.
  */
-export type CollapsedLine =
-  | DiffLine
-  | { type: 'collapsed'; count: number };
+export type CollapsedLine = DiffLine | { type: 'collapsed'; count: number };
 
-export function collapseEqual(
-  lines: DiffLine[],
-  context = 3,
-): CollapsedLine[] {
+export function collapseEqual(lines: DiffLine[], context = 3): CollapsedLine[] {
   const out: CollapsedLine[] = [];
   let i = 0;
 
@@ -112,7 +105,7 @@ export function collapseEqual(
 
     // Find run of equal lines
     let runEnd = i;
-    while (runEnd < lines.length && lines[runEnd]!.type === 'equal') {
+    while (runEnd < lines.length && lines[runEnd]?.type === 'equal') {
       runEnd++;
     }
     const runLen = runEnd - i;

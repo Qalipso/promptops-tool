@@ -1,3 +1,5 @@
+import { eq } from 'drizzle-orm';
+import { logger } from '../lib/logger.js';
 /**
  * Seed script — inserts one demo asset for local dev.
  * Idempotent: skips inserts if records already exist.
@@ -8,8 +10,6 @@
  */
 import { db } from './client.js';
 import { assets } from './schema.js';
-import { eq } from 'drizzle-orm';
-import { logger } from '../lib/logger.js';
 
 const ASSET_ID = 'demo.email.subject-line-gen';
 

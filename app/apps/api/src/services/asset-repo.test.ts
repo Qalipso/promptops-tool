@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 vi.mock('../db/client.js', () => ({
@@ -105,7 +105,16 @@ describe('createAsset', () => {
 
     const { createAsset } = await import('./asset-repo.js');
     await expect(
-      createAsset({ id: 'a.b.c', owner: 'actor', variable_contract: [], output_contract: {}, model_config: {} }, 'actor'),
+      createAsset(
+        {
+          id: 'a.b.c',
+          owner: 'actor',
+          variable_contract: [],
+          output_contract: {},
+          model_config: {},
+        },
+        'actor',
+      ),
     ).rejects.toMatchObject({ code: 'conflict' });
   });
 });

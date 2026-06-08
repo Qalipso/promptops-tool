@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
+import { openapiSpec } from './lib/openapi-spec.js';
 import { tokenAuth } from './middleware/auth.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { requestLogger } from './middleware/request-logger.js';
-import { health } from './routes/health.js';
 import { assetsRouter } from './routes/assets.js';
-import { openapiSpec } from './lib/openapi-spec.js';
+import { health } from './routes/health.js';
 
 export function buildApp() {
   const app = new Hono();
@@ -70,7 +70,12 @@ export function buildApp() {
   app.onError(errorHandler);
 
   // ── 404 catch-all ─────────────────────────────────────────
-  app.notFound((c) => c.json({ success: false, error: { code: 'not_found', message: 'Route not found', details: null } }, 404));
+  app.notFound((c) =>
+    c.json(
+      { success: false, error: { code: 'not_found', message: 'Route not found', details: null } },
+      404,
+    ),
+  );
 
   return app;
 }

@@ -1,24 +1,26 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
-import pg from 'pg';
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
+import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { env } from '../lib/env.js';
 import * as schema from './schema.js';
 
-const { Pool } = pg;
+let _sqlite: Database.Database | null = null;
 
-let _pool: pg.Pool | null = null;
-
-export function getPool(): pg.Pool {
-  if (!_pool) {
-    _pool = new Pool({
-      connectionString: env.DATABASE_URL,
-      max: 10,
-      idleTimeoutMillis: 30_000,
-    });
+export function getSqlite(): Database.Database {
+  if (!_sqlite) {
+    mkdirSync(dirname(env.PROMPTOPS_DB_PATH), { recursive: true });
+    _sqlite = new Database(env.PROMPTOPS_DB_PATH);
+    _sqlite.pragma('journal_mode = WAL');
+    _sqlite.pragma('foreign_keys = ON');
   }
-  return _pool;
+  return _sqlite;
 }
 
-export const db = drizzle(getPool(), { schema, logger: env.NODE_ENV === 'development' });
+export const db = drizzle(getSqlite(), {
+  schema,
+  logger: env.NODE_ENV === 'development',
+});
 
 export type DB = typeof db;
 export { schema };

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { interpolate, extractVariables, findUnresolved, findUnused } from './template-engine.js';
+import { describe, expect, it } from 'vitest';
+import { extractVariables, findUnresolved, findUnused, interpolate } from './template-engine.js';
 
 // ── interpolate ───────────────────────────────────────────────────────────────
 

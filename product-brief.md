@@ -64,6 +64,28 @@ The MVP deliberately does **not** include:
 
 These are valid features. They are V2+ at the earliest. Shipping them in MVP would dilute the core promise.
 
+## Builder Module (scope expansion)
+
+The **Builder** is an additional, optional module layered on top of the registry — not a
+replacement for it. It is a guided 8-step wizard (Business Brief → Agent Behavior → Rules →
+Tools → Prompt Preview → Test Cases → Eval Results → Release) that compiles a structured agent
+spec into a normal prompt version and promotes it through the same versioning, audit, and diff
+machinery as any hand-authored prompt.
+
+This consciously softens two earlier non-goals:
+
+- **Tool-use definitions** are now in scope as *declarative metadata* on a version (tool name,
+  description, params). The Builder does **not** orchestrate chains, call tools, or run agents —
+  it captures the tool contract so the compiled prompt and downstream runtime know what exists.
+- **Test-case scaffolding** is now in scope: the Builder generates baseline behavioral cases
+  (happy-path, missing-info, out-of-scope, ambiguous, per-guardrail probes). These are inputs
+  only — PromptOps still does not run evals. Eval *results* are imported as a `.txt` from the
+  external AI Eval tool and parsed for display.
+
+Everything the Builder produces is a first-class registry artifact: a versioned, hashable,
+auditable prompt. Remove the wizard and the registry still stands. That is the test for whether
+a feature belongs here.
+
 ## Success Metrics
 
 The product is working if a team using it can honestly say:

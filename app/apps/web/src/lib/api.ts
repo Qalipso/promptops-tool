@@ -9,7 +9,7 @@
 import * as mock from './mock-data';
 
 const DEMO = process.env.DEMO_MODE === 'true';
-const API_URL = process.env.PROMPTOPS_API_URL ?? 'http://localhost:3013';
+const API_URL = process.env.PROMPTOPS_API_URL ?? 'http://127.0.0.1:3013';
 const TOKEN = process.env.PROMPTOPS_API_TOKEN ?? '';
 
 async function apiFetch<T>(path: string): Promise<T> {
@@ -148,8 +148,7 @@ export interface AuditEvent {
 // ── Fetchers ──────────────────────────────────────────────────────────────────
 
 export const api = {
-  assets: () =>
-    DEMO ? Promise.resolve(mock.MOCK_ASSETS) : apiFetch<Asset[]>('/api/v0/assets'),
+  assets: () => (DEMO ? Promise.resolve(mock.MOCK_ASSETS) : apiFetch<Asset[]>('/api/v0/assets')),
   asset: (id: string) =>
     DEMO
       ? Promise.resolve(mock.MOCK_ASSETS.find((a) => a.id === id) ?? null).then((a) => {

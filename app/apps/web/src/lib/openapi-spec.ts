@@ -12,7 +12,11 @@ export const openapiSpec = {
   security: [{ bearerAuth: [] }],
   components: {
     securitySchemes: {
-      bearerAuth: { type: 'http', scheme: 'bearer', description: 'Set PROMPTOPS_API_TOKEN env var' },
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        description: 'Set PROMPTOPS_API_TOKEN env var',
+      },
     },
     schemas: {
       Asset: {
@@ -25,7 +29,10 @@ export const openapiSpec = {
           tags: { type: 'array', items: { type: 'string' } },
           lifecycle: { type: 'string', enum: ['unregistered', 'active', 'deprecated', 'sunset'] },
           active_version_id: { type: 'string', format: 'uuid', nullable: true },
-          variable_contract: { type: 'array', items: { '$ref': '#/components/schemas/VariableEntry' } },
+          variable_contract: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/VariableEntry' },
+          },
           model_config: { type: 'object' },
           output_contract: { type: 'object' },
           created_at: { type: 'string', format: 'date-time' },
@@ -37,24 +44,45 @@ export const openapiSpec = {
         required: ['name', 'kind'],
         properties: {
           name: { type: 'string', example: 'user_name' },
-          kind: { type: 'string', enum: ['string', 'number', 'boolean', 'enum'], example: 'string' },
+          kind: {
+            type: 'string',
+            enum: ['string', 'number', 'boolean', 'enum'],
+            example: 'string',
+          },
           required: { type: 'boolean', default: true },
           description: { type: 'string' },
-          values: { type: 'array', items: { type: 'string' }, description: 'Allowed values for enum kind' },
+          values: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Allowed values for enum kind',
+          },
           default: { description: 'Default value' },
           example: { type: 'string' },
         },
       },
       Version: {
         type: 'object',
-        required: ['id', 'asset_id', 'version', 'state', 'body', 'author', 'etag', 'body_hash', 'created_at'],
+        required: [
+          'id',
+          'asset_id',
+          'version',
+          'state',
+          'body',
+          'author',
+          'etag',
+          'body_hash',
+          'created_at',
+        ],
         properties: {
           id: { type: 'string', format: 'uuid' },
           asset_id: { type: 'string' },
           version: { type: 'string', example: '1.2.0' },
           state: { type: 'string', enum: ['draft', 'active', 'previous', 'archived'] },
-          body: { '$ref': '#/components/schemas/PromptBody' },
-          variable_contract_snapshot: { type: 'array', items: { '$ref': '#/components/schemas/VariableEntry' } },
+          body: { $ref: '#/components/schemas/PromptBody' },
+          variable_contract_snapshot: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/VariableEntry' },
+          },
           model_config_snapshot: { type: 'object' },
           output_contract_snapshot: { type: 'object' },
           changelog: { type: 'string', nullable: true },
@@ -69,8 +97,15 @@ export const openapiSpec = {
         type: 'object',
         required: ['user'],
         properties: {
-          system: { type: 'string', nullable: true, description: 'System prompt. Use {{variable}} for variables.' },
-          user: { type: 'string', description: 'User prompt template. Use {{variable}} for variables.' },
+          system: {
+            type: 'string',
+            nullable: true,
+            description: 'System prompt. Use {{variable}} for variables.',
+          },
+          user: {
+            type: 'string',
+            description: 'User prompt template. Use {{variable}} for variables.',
+          },
         },
       },
       RenderResult: {
@@ -80,9 +115,21 @@ export const openapiSpec = {
           inputs: { type: 'object', additionalProperties: true },
           rendered_system: { type: 'string', nullable: true },
           rendered_user: { type: 'string' },
-          rendered_hash: { type: 'string', description: 'SHA-256(rendered_system:rendered_user) — proves exactly what was rendered' },
-          unresolved_variables: { type: 'array', items: { type: 'string' }, description: '{{vars}} still present after substitution' },
-          unused_inputs: { type: 'array', items: { type: 'string' }, description: 'Input keys not referenced in template' },
+          rendered_hash: {
+            type: 'string',
+            description:
+              'SHA-256(rendered_system:rendered_user) — proves exactly what was rendered',
+          },
+          unresolved_variables: {
+            type: 'array',
+            items: { type: 'string' },
+            description: '{{vars}} still present after substitution',
+          },
+          unused_inputs: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Input keys not referenced in template',
+          },
         },
       },
       AuditEvent: {
@@ -141,7 +188,7 @@ export const openapiSpec = {
                   type: 'object',
                   properties: {
                     success: { type: 'boolean' },
-                    data: { type: 'array', items: { '$ref': '#/components/schemas/Asset' } },
+                    data: { type: 'array', items: { $ref: '#/components/schemas/Asset' } },
                   },
                 },
               },
@@ -161,12 +208,23 @@ export const openapiSpec = {
                 type: 'object',
                 required: ['id'],
                 properties: {
-                  id: { type: 'string', description: 'Stable dot-namespaced ID. Cannot be changed.', example: 'shadow.daily-report' },
+                  id: {
+                    type: 'string',
+                    description: 'Stable dot-namespaced ID. Cannot be changed.',
+                    example: 'shadow.daily-report',
+                  },
                   owner: { type: 'string' },
                   description: { type: 'string' },
                   tags: { type: 'array', items: { type: 'string' } },
-                  lifecycle: { type: 'string', enum: ['unregistered', 'active', 'deprecated', 'sunset'], default: 'active' },
-                  variable_contract: { type: 'array', items: { '$ref': '#/components/schemas/VariableEntry' } },
+                  lifecycle: {
+                    type: 'string',
+                    enum: ['unregistered', 'active', 'deprecated', 'sunset'],
+                    default: 'active',
+                  },
+                  variable_contract: {
+                    type: 'array',
+                    items: { $ref: '#/components/schemas/VariableEntry' },
+                  },
                   model_config: { type: 'object' },
                   output_contract: { type: 'object' },
                 },
@@ -177,7 +235,17 @@ export const openapiSpec = {
         responses: {
           '201': {
             description: 'Created asset',
-            content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { '$ref': '#/components/schemas/Asset' } } } } },
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { $ref: '#/components/schemas/Asset' },
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -189,15 +257,32 @@ export const openapiSpec = {
         tags: ['Assets'],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
-          '200': { description: 'Asset', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { '$ref': '#/components/schemas/Asset' } } } } } },
-          '404': { description: 'Not found', content: { 'application/json': { schema: { '$ref': '#/components/schemas/Error' } } } },
+          '200': {
+            description: 'Asset',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { $ref: '#/components/schemas/Asset' },
+                  },
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Not found',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
         },
       },
       patch: {
         summary: 'Update asset metadata',
         operationId: 'updateAsset',
         tags: ['Assets'],
-        description: 'Update description, tags, lifecycle, or contracts. Asset ID and owner cannot be changed.',
+        description:
+          'Update description, tags, lifecycle, or contracts. Asset ID and owner cannot be changed.',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: {
           required: true,
@@ -208,8 +293,14 @@ export const openapiSpec = {
                 properties: {
                   description: { type: 'string' },
                   tags: { type: 'array', items: { type: 'string' } },
-                  lifecycle: { type: 'string', enum: ['unregistered', 'active', 'deprecated', 'sunset'] },
-                  variable_contract: { type: 'array', items: { '$ref': '#/components/schemas/VariableEntry' } },
+                  lifecycle: {
+                    type: 'string',
+                    enum: ['unregistered', 'active', 'deprecated', 'sunset'],
+                  },
+                  variable_contract: {
+                    type: 'array',
+                    items: { $ref: '#/components/schemas/VariableEntry' },
+                  },
                   model_config: { type: 'object' },
                   output_contract: { type: 'object' },
                 },
@@ -218,7 +309,20 @@ export const openapiSpec = {
           },
         },
         responses: {
-          '200': { description: 'Updated asset', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { '$ref': '#/components/schemas/Asset' } } } } } },
+          '200': {
+            description: 'Updated asset',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { $ref: '#/components/schemas/Asset' },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -227,11 +331,28 @@ export const openapiSpec = {
         summary: 'Get active version',
         operationId: 'getActiveVersion',
         tags: ['Versions'],
-        description: 'Returns the currently active version directly. Most common endpoint for agents retrieving a prompt.',
+        description:
+          'Returns the currently active version directly. Most common endpoint for agents retrieving a prompt.',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
-          '200': { description: 'Active version', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { '$ref': '#/components/schemas/Version' } } } } } },
-          '404': { description: 'No active version', content: { 'application/json': { schema: { '$ref': '#/components/schemas/Error' } } } },
+          '200': {
+            description: 'Active version',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { $ref: '#/components/schemas/Version' },
+                  },
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'No active version',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
         },
       },
     },
@@ -242,7 +363,20 @@ export const openapiSpec = {
         tags: ['Versions'],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
-          '200': { description: 'All versions for asset', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { type: 'array', items: { '$ref': '#/components/schemas/Version' } } } } } } },
+          '200': {
+            description: 'All versions for asset',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { type: 'array', items: { $ref: '#/components/schemas/Version' } },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       post: {
@@ -257,12 +391,21 @@ export const openapiSpec = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['version', 'body', 'variable_contract_snapshot', 'model_config_snapshot', 'output_contract_snapshot'],
+                required: [
+                  'version',
+                  'body',
+                  'variable_contract_snapshot',
+                  'model_config_snapshot',
+                  'output_contract_snapshot',
+                ],
                 properties: {
                   version: { type: 'string', description: 'Semver string', example: '1.0.0' },
                   parent_version_id: { type: 'string', format: 'uuid' },
-                  body: { '$ref': '#/components/schemas/PromptBody' },
-                  variable_contract_snapshot: { type: 'array', items: { '$ref': '#/components/schemas/VariableEntry' } },
+                  body: { $ref: '#/components/schemas/PromptBody' },
+                  variable_contract_snapshot: {
+                    type: 'array',
+                    items: { $ref: '#/components/schemas/VariableEntry' },
+                  },
                   model_config_snapshot: { type: 'object' },
                   output_contract_snapshot: { type: 'object' },
                   changelog: { type: 'string', example: 'Added tone variable' },
@@ -270,7 +413,10 @@ export const openapiSpec = {
               },
               example: {
                 version: '1.0.0',
-                body: { system: 'You are a helpful assistant.', user: 'Summarize {{text}} in {{language}}.' },
+                body: {
+                  system: 'You are a helpful assistant.',
+                  user: 'Summarize {{text}} in {{language}}.',
+                },
                 variable_contract_snapshot: [
                   { name: 'text', kind: 'string', required: true },
                   { name: 'language', kind: 'string', required: true, default: 'English' },
@@ -283,7 +429,20 @@ export const openapiSpec = {
           },
         },
         responses: {
-          '201': { description: 'Created draft version', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { '$ref': '#/components/schemas/Version' } } } } } },
+          '201': {
+            description: 'Created draft version',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { $ref: '#/components/schemas/Version' },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -297,7 +456,20 @@ export const openapiSpec = {
           { name: 'vid', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
         ],
         responses: {
-          '200': { description: 'Version', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { '$ref': '#/components/schemas/Version' } } } } } },
+          '200': {
+            description: 'Version',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { $ref: '#/components/schemas/Version' },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -312,7 +484,20 @@ export const openapiSpec = {
           { name: 'vid', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
         ],
         responses: {
-          '200': { description: 'Promoted version', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { '$ref': '#/components/schemas/Version' } } } } } },
+          '200': {
+            description: 'Promoted version',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { $ref: '#/components/schemas/Version' },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -326,7 +511,20 @@ export const openapiSpec = {
           { name: 'vid', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
         ],
         responses: {
-          '200': { description: 'Archived version', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { '$ref': '#/components/schemas/Version' } } } } } },
+          '200': {
+            description: 'Archived version',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { $ref: '#/components/schemas/Version' },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -335,7 +533,8 @@ export const openapiSpec = {
         summary: 'Render version with variable inputs',
         operationId: 'renderVersion',
         tags: ['Render'],
-        description: 'Template substitution only — no LLM call. Replaces {{variables}} with provided inputs. Returns rendered text + diagnostics.',
+        description:
+          'Template substitution only — no LLM call. Replaces {{variables}} with provided inputs. Returns rendered text + diagnostics.',
         parameters: [
           { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
           { name: 'vid', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
@@ -346,15 +545,37 @@ export const openapiSpec = {
               schema: {
                 type: 'object',
                 properties: {
-                  inputs: { type: 'object', additionalProperties: true, description: 'Variable values', example: { user_name: 'Alice', language: 'Spanish' } },
-                  save: { type: 'boolean', default: false, description: 'Persist render record to audit log' },
+                  inputs: {
+                    type: 'object',
+                    additionalProperties: true,
+                    description: 'Variable values',
+                    example: { user_name: 'Alice', language: 'Spanish' },
+                  },
+                  save: {
+                    type: 'boolean',
+                    default: false,
+                    description: 'Persist render record to audit log',
+                  },
                 },
               },
             },
           },
         },
         responses: {
-          '202': { description: 'Render result', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { '$ref': '#/components/schemas/RenderResult' } } } } } },
+          '202': {
+            description: 'Render result',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { $ref: '#/components/schemas/RenderResult' },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -371,13 +592,28 @@ export const openapiSpec = {
               schema: {
                 type: 'object',
                 required: ['justification'],
-                properties: { justification: { type: 'string', example: 'Regression in new version' } },
+                properties: {
+                  justification: { type: 'string', example: 'Regression in new version' },
+                },
               },
             },
           },
         },
         responses: {
-          '200': { description: 'Rolled-back version now active', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { '$ref': '#/components/schemas/Version' } } } } } },
+          '200': {
+            description: 'Rolled-back version now active',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { $ref: '#/components/schemas/Version' },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -391,7 +627,20 @@ export const openapiSpec = {
           { name: 'limit', in: 'query', schema: { type: 'integer', default: 50, maximum: 200 } },
         ],
         responses: {
-          '200': { description: 'Audit events', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { type: 'array', items: { '$ref': '#/components/schemas/AuditEvent' } } } } } } },
+          '200': {
+            description: 'Audit events',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { type: 'array', items: { $ref: '#/components/schemas/AuditEvent' } },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -402,7 +651,20 @@ export const openapiSpec = {
         tags: ['Assets'],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
-          '200': { description: 'Stats', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean' }, data: { '$ref': '#/components/schemas/AssetStats' } } } } } },
+          '200': {
+            description: 'Stats',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    data: { $ref: '#/components/schemas/AssetStats' },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../db/client.js', () => ({
   db: {
@@ -14,7 +14,8 @@ vi.mock('../lib/errors.js', () => ({
   errors: {
     notFound: (msg: string) => Object.assign(new Error(msg), { code: 'not_found', status: 404 }),
     conflict: (msg: string) => Object.assign(new Error(msg), { code: 'conflict', status: 409 }),
-    badRequest: (msg: string) => Object.assign(new Error(msg), { code: 'bad_request', status: 400 }),
+    badRequest: (msg: string) =>
+      Object.assign(new Error(msg), { code: 'bad_request', status: 400 }),
   },
 }));
 

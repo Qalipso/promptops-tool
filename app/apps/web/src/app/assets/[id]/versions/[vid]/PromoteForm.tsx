@@ -9,14 +9,12 @@ export function PromoteForm({ assetId, versionId }: { assetId: string; versionId
 
   return (
     <div>
-      {state?.error && (
-        <p className="text-red-400 text-xs mb-2">{state.error}</p>
-      )}
+      {state?.error && <p className="text-danger text-xs mb-2">{state.error}</p>}
       <form action={action}>
         <button
           type="submit"
           disabled={pending}
-          className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 disabled:bg-gray-800 disabled:text-gray-600 text-emerald-100 text-xs rounded transition-colors"
+          className="px-3 py-1.5 bg-accent hover:opacity-90 text-accent-fg shadow-sm disabled:opacity-50 text-xs rounded-md transition-colors"
         >
           {pending ? 'Promoting…' : 'Promote to active'}
         </button>

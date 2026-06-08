@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-const API_URL = process.env.PROMPTOPS_API_URL ?? 'http://localhost:3013';
+const API_URL = process.env.PROMPTOPS_API_URL ?? 'http://127.0.0.1:3013';
 const TOKEN = process.env.PROMPTOPS_API_TOKEN ?? '';
 
 async function apiPost(path: string, body: unknown) {
@@ -32,7 +32,12 @@ export async function createAssetAction(
   const tagsRaw = (formData.get('tags') as string).trim();
   const lifecycle = (formData.get('lifecycle') as string) || 'active';
 
-  const tags = tagsRaw ? tagsRaw.split(',').map((t) => t.trim()).filter(Boolean) : [];
+  const tags = tagsRaw
+    ? tagsRaw
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : [];
 
   if (!id) return { error: 'Asset ID is required' };
 

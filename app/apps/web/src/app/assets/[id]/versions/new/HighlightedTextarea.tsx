@@ -1,11 +1,11 @@
 'use client';
 
-import { useRef, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 // Shared layout: must be identical between backdrop and textarea
 const SHARED: React.CSSProperties = {
   fontFamily:
-    'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+    'var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
   fontSize: '12px',
   lineHeight: '1.625',
   padding: '10px 12px',
@@ -24,7 +24,7 @@ function escapeAndHighlight(text: string): string {
     .replace(/>/g, '&gt;')
     .replace(
       /\{\{([a-z][a-z0-9_]*)\}\}/gi,
-      '<mark style="background:rgba(99,102,241,0.25);color:#a5b4fc;border-radius:3px;padding:0 2px">{{$1}}</mark>',
+      '<mark style="background:rgb(var(--accent) / 0.22);color:rgb(var(--accent));border-radius:3px;padding:0 2px">{{$1}}</mark>',
     );
 }
 
@@ -55,17 +55,15 @@ export function HighlightedTextarea({
   }, []);
 
   return (
-    <div
-      className="relative rounded-md border border-gray-700 focus-within:border-gray-500 transition-colors"
-      style={{ backgroundColor: '#111827' }}
-    >
+    <div className="relative rounded-md border border-border bg-surface focus-within:border-accent/50 transition-colors">
       {/* Highlight backdrop — sits behind, shows coloured variables */}
       <div
         ref={backdropRef}
         aria-hidden="true"
-        className="absolute inset-0 pointer-events-none overflow-hidden rounded-md text-gray-200"
+        className="absolute inset-0 pointer-events-none overflow-hidden rounded-md text-text"
         style={SHARED}
-        dangerouslySetInnerHTML={{ __html: escapeAndHighlight(value) + '\u200b' }}
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: value HTML-escaped in escapeAndHighlight before injection
+        dangerouslySetInnerHTML={{ __html: `${escapeAndHighlight(value)}\u200b` }}
       />
 
       {/* Editable layer — transparent text, caret visible */}
@@ -79,12 +77,12 @@ export function HighlightedTextarea({
         rows={rows}
         placeholder={placeholder}
         spellCheck={false}
-        className="relative w-full rounded-md resize-y placeholder-gray-600 focus:outline-none"
+        className="relative w-full rounded-md resize-y placeholder:text-muted/60 focus:outline-none"
         style={{
           ...SHARED,
           background: 'transparent',
           color: 'transparent',
-          caretColor: '#e5e7eb',
+          caretColor: 'rgb(var(--text))',
           border: 'none',
           outline: 'none',
         }}

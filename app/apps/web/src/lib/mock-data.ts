@@ -2,13 +2,14 @@
  * Demo-mode fixtures. Loaded when DEMO_MODE=true.
  * Mirrors real API shapes without a running backend.
  */
-import type { Asset, Version, AuditEvent, AssetStats, RenderResult } from './api';
+import type { Asset, AssetStats, AuditEvent, RenderResult, Version } from './api';
 
 export const MOCK_ASSETS: Asset[] = [
   {
     id: 'shadow/classify-entry',
     owner: 'shadow-team',
-    description: 'Classifies a raw user entry into type, emotional valence, areas, and next-action hint.',
+    description:
+      'Classifies a raw user entry into type, emotional valence, areas, and next-action hint.',
     tags: ['shadow', 'classification', 'production'],
     lifecycle: 'active',
     active_version_id: 'v-cls-003',
@@ -17,7 +18,12 @@ export const MOCK_ASSETS: Asset[] = [
     stats: { version_count: 3, last_rendered_at: '2026-05-20T08:14:00Z' },
     variable_contract: [
       { name: 'entry_text', kind: 'string', required: true, description: 'Raw entry from user.' },
-      { name: 'user_areas', kind: 'array', required: false, description: 'User-defined life areas for context.' },
+      {
+        name: 'user_areas',
+        kind: 'array',
+        required: false,
+        description: 'User-defined life areas for context.',
+      },
     ],
   },
   {
@@ -31,15 +37,26 @@ export const MOCK_ASSETS: Asset[] = [
     updated_at: '2026-04-15T09:10:00Z',
     stats: { version_count: 2, last_rendered_at: '2026-05-24T07:00:00Z' },
     variable_contract: [
-      { name: 'entries', kind: 'array', required: true, description: 'Array of classified entry objects.' },
-      { name: 'date', kind: 'string', required: true, description: 'ISO date string for the report.' },
+      {
+        name: 'entries',
+        kind: 'array',
+        required: true,
+        description: 'Array of classified entry objects.',
+      },
+      {
+        name: 'date',
+        kind: 'string',
+        required: true,
+        description: 'ISO date string for the report.',
+      },
       { name: 'area_scores', kind: 'object', required: false },
     ],
   },
   {
     id: 'shadow/chat-context-builder',
     owner: 'shadow-team',
-    description: 'Builds memory context string for ShadowOrb chat. Superseded by rag.ts buildMemoryContext.',
+    description:
+      'Builds memory context string for ShadowOrb chat. Superseded by rag.ts buildMemoryContext.',
     tags: ['shadow', 'rag', 'deprecated'],
     lifecycle: 'deprecated',
     active_version_id: null,
@@ -51,7 +68,8 @@ export const MOCK_ASSETS: Asset[] = [
   {
     id: 'eval/llm-judge',
     owner: 'ai-eval-team',
-    description: 'LLM-as-judge prompt. Scores a model output against a rubric criterion (0–5 scale).',
+    description:
+      'LLM-as-judge prompt. Scores a model output against a rubric criterion (0–5 scale).',
     tags: ['evaluation', 'judge', 'production'],
     lifecycle: 'active',
     active_version_id: 'v-judge-004',
@@ -62,7 +80,12 @@ export const MOCK_ASSETS: Asset[] = [
       { name: 'criterion', kind: 'string', required: true, description: 'Rubric criterion name.' },
       { name: 'criterion_description', kind: 'string', required: true },
       { name: 'model_output', kind: 'string', required: true, description: 'Output to evaluate.' },
-      { name: 'reference_answer', kind: 'string', required: false, description: 'Optional gold standard.' },
+      {
+        name: 'reference_answer',
+        kind: 'string',
+        required: false,
+        description: 'Optional gold standard.',
+      },
     ],
   },
 ];
@@ -137,8 +160,7 @@ export const MOCK_VERSIONS: Record<string, Version[]> = {
       body: {
         system:
           'You are Shadow, a reflective AI. Generate a concise daily report in markdown. Be direct, not therapeutic.',
-        user:
-          'Date: {{date}}\n\nEntries ({{entries.length}}):\n{{entries}}\n\nArea scores:\n{{area_scores}}\n\nWrite: executive summary (2 sentences), key signals (bullets), one pattern noticed, one suggested next action.',
+        user: 'Date: {{date}}\n\nEntries ({{entries.length}}):\n{{entries}}\n\nArea scores:\n{{area_scores}}\n\nWrite: executive summary (2 sentences), key signals (bullets), one pattern noticed, one suggested next action.',
       },
       variable_contract_snapshot: null,
       model_config_snapshot: { model: 'gpt-4o', max_tokens: 600 },
@@ -200,8 +222,7 @@ export const MOCK_VERSIONS: Record<string, Version[]> = {
       body: {
         system:
           'You are an impartial evaluation judge. Score model outputs against rubric criteria. Return JSON only.',
-        user:
-          'Criterion: {{criterion}}\nDescription: {{criterion_description}}\n\nModel output:\n{{model_output}}\n{{#reference_answer}}\nReference answer:\n{{reference_answer}}\n{{/reference_answer}}\n\nReturn: { "score": 0-5, "reasoning": string, "flags": string[] }',
+        user: 'Criterion: {{criterion}}\nDescription: {{criterion_description}}\n\nModel output:\n{{model_output}}\n{{#reference_answer}}\nReference answer:\n{{reference_answer}}\n{{/reference_answer}}\n\nReturn: { "score": 0-5, "reasoning": string, "flags": string[] }',
       },
       variable_contract_snapshot: null,
       model_config_snapshot: { model: 'gpt-4o', temperature: 0 },
@@ -253,8 +274,7 @@ export const MOCK_RENDER: RenderResult = {
   inputs: { entry_text: 'I keep postponing the portfolio draft.', user_areas: ['Work', 'Growth'] },
   rendered_system:
     'You are Shadow, a private AI life assistant. Classify the entry below. Return JSON only.\n\nSchema:\n{\n  "type": "thought|task|feeling|loop|note",\n  "valence": -2..2,\n  "areas": string[],\n  "urgency": "low|medium|high",\n  "next_action": string | null\n}',
-  rendered_user:
-    'Entry: I keep postponing the portfolio draft.\n\nUser areas: Work, Growth',
+  rendered_user: 'Entry: I keep postponing the portfolio draft.\n\nUser areas: Work, Growth',
   rendered_hash: 'sha256:rendered_demo_hash',
   unresolved_variables: [],
   unused_inputs: [],

@@ -21,8 +21,7 @@ export class AppError extends Error {
 export const errors = {
   unauthorized: (msg = 'Missing or invalid API token') =>
     new AppError({ status: 401, code: 'unauthorized', message: msg }),
-  forbidden: (msg = 'Forbidden') =>
-    new AppError({ status: 403, code: 'forbidden', message: msg }),
+  forbidden: (msg = 'Forbidden') => new AppError({ status: 403, code: 'forbidden', message: msg }),
   notFound: (resource: string) =>
     new AppError({ status: 404, code: 'not_found', message: `${resource} not found` }),
   badRequest: (msg: string, details?: unknown) =>

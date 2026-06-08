@@ -1,19 +1,36 @@
 import 'dotenv/config';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { z } from 'zod';
 
-const EnvSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().int().positive().default(3030),
-  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
-  PROMPTOPS_API_TOKEN: z
-    .string()
-    .min(16, 'PROMPTOPS_API_TOKEN must be at least 16 characters'),
-  OPENAI_API_KEY: z.string().optional(),
-  OPENAI_DEFAULT_MODEL: z.string().default('gpt-4o-mini'),
-  MAX_USD_PER_RUN: z.coerce.number().nonnegative().default(1.0),
-  MAX_USD_PER_DAY: z.coerce.number().nonnegative().default(10.0),
-});
+const DEFAULT_DB_PATH = join(homedir(), '.promptops', 'promptops.db');
+
+const EnvSchema = z
+  .object({
+    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    PORT: z.coerce.number().int().positive().default(3013),
+    LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+    /** Local single-user mode: auth bypassed, actor = "local". Default on. */
+    PROMPTOPS_LOCAL: z
+      .enum(['0', '1', 'true', 'false'])
+      .default('1')
+      .transform((v) => v === '1' || v === 'true'),
+    /** SQLite database file. Auto-created on first boot. */
+    PROMPTOPS_DB_PATH: z.string().min(1).default(DEFAULT_DB_PATH),
+    /** Bearer token — only required when PROMPTOPS_LOCAL is off. */
+    PROMPTOPS_API_TOKEN: z.string().optional(),
+  })
+  .superRefine((cfg, ctx) => {
+    if (!cfg.PROMPTOPS_LOCAL) {
+      if (!cfg.PROMPTOPS_API_TOKEN || cfg.PROMPTOPS_API_TOKEN.length < 16) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['PROMPTOPS_API_TOKEN'],
+          message: 'PROMPTOPS_API_TOKEN (min 16 chars) is required when PROMPTOPS_LOCAL is off',
+        });
+      }
+    }
+  });
 
 const parsed = EnvSchema.safeParse(process.env);
 

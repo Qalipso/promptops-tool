@@ -1,10 +1,10 @@
 'use server';
 
+import type { RenderResult } from '@/lib/api';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import type { RenderResult } from '@/lib/api';
 
-const API_URL = process.env.PROMPTOPS_API_URL ?? 'http://localhost:3013';
+const API_URL = process.env.PROMPTOPS_API_URL ?? 'http://127.0.0.1:3013';
 const TOKEN = process.env.PROMPTOPS_API_TOKEN ?? '';
 
 async function apiPost(path: string, body?: unknown) {
@@ -45,7 +45,10 @@ export async function promoteAction(
   redirect(`/assets/${encodeURIComponent(assetId)}`);
 }
 
-export async function rollbackAction(assetId: string, justification: string): Promise<{ error?: string }> {
+export async function rollbackAction(
+  assetId: string,
+  justification: string,
+): Promise<{ error?: string }> {
   try {
     await apiPost(`/api/v0/assets/${assetId}/rollback`, { justification });
     revalidatePath(`/assets/${assetId}`);

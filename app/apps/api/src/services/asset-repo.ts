@@ -1,6 +1,6 @@
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '../db/client.js';
-import { assets, type AssetInsert, type AssetRow } from '../db/schema.js';
+import { type AssetInsert, type AssetRow, assets } from '../db/schema.js';
 import { errors } from '../lib/errors.js';
 import { writeAudit } from './audit.js';
 
@@ -14,10 +14,7 @@ export async function getAsset(id: string): Promise<AssetRow> {
   return row;
 }
 
-export async function createAsset(
-  data: AssetInsert,
-  actor: string,
-): Promise<AssetRow> {
+export async function createAsset(data: AssetInsert, actor: string): Promise<AssetRow> {
   const existing = await db
     .select({ id: assets.id })
     .from(assets)
@@ -49,21 +46,15 @@ export interface AssetPatch {
   model_config?: unknown;
 }
 
-export async function updateAsset(
-  id: string,
-  patch: AssetPatch,
-  actor: string,
-): Promise<AssetRow> {
+export async function updateAsset(id: string, patch: AssetPatch, actor: string): Promise<AssetRow> {
   await getAsset(id); // 404 guard
 
   // Strip undefined — Drizzle strict mode rejects them in set()
-  const clean = Object.fromEntries(
-    Object.entries(patch).filter(([, v]) => v !== undefined),
-  );
+  const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
 
   const [row] = await db
     .update(assets)
-    .set({ ...clean, updated_at: sql`now()` })
+    .set({ ...clean, updated_at: new Date() })
     .where(eq(assets.id, id))
     .returning();
 

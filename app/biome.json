@@ -2,7 +2,15 @@
   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
-    "ignore": ["dist", "node_modules", "coverage", "**/*.generated.*", "infra/migrations/**"]
+    "ignore": [
+      "dist",
+      "node_modules",
+      "coverage",
+      ".next",
+      "**/*.generated.*",
+      "infra/migrations/**",
+      "infra/migrations-sqlite/**"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -14,9 +22,23 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-      "suspicious": { "noExplicitAny": "error" },
-      "style": { "useImportType": "error", "noNonNullAssertion": "warn" },
-      "correctness": { "noUnusedVariables": "error", "noUnusedImports": "error" }
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noThenProperty": "off",
+        "noArrayIndexKey": "off"
+      },
+      "style": { "useImportType": "error", "noNonNullAssertion": "off" },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
+        "useExhaustiveDependencies": "warn"
+      },
+      "a11y": {
+        "noLabelWithoutControl": "warn",
+        "noSvgWithoutTitle": "warn",
+        "useButtonType": "warn",
+        "useSemanticElements": "warn"
+      }
     }
   },
   "javascript": {
@@ -26,5 +48,16 @@
       "semicolons": "always"
     }
   },
-  "organizeImports": { "enabled": true }
+  "organizeImports": { "enabled": true },
+  "overrides": [
+    {
+      "include": ["**/*.test.ts", "**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noExplicitAny": "off", "noConsole": "off" },
+          "style": { "noNonNullAssertion": "off" }
+        }
+      }
+    }
+  ]
 }

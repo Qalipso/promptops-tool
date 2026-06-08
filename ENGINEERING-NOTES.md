@@ -4,16 +4,21 @@ Key technical decisions, trade-offs, and architectural reasoning. Intended for t
 
 ---
 
+> **Direction note (2026-06):** PromptOps pivoted to **local-first**. The DB is now
+> **SQLite (better-sqlite3)**, not Postgres; auth is bypassed in local mode. A **CLI** and a
+> guided **Builder** wizard were added. This document reflects the current local-first stack.
+
 ## Stack
 
 | Layer | Choice | Alternatives considered |
 |-------|--------|------------------------|
 | API | Hono (TypeScript) | Express, Fastify |
-| ORM | Drizzle | Prisma, Kysely |
-| Database | PostgreSQL | SQLite, PlanetScale |
+| ORM | Drizzle (sqlite-core) | Prisma, Kysely |
+| Database | **SQLite** (better-sqlite3) | PostgreSQL (original), PlanetScale |
 | Frontend | Next.js 15 App Router | — |
-| Package manager | pnpm (monorepo) | npm workspaces, Turborepo |
-| Deployment | Local (Postgres dependency) | Vercel + PlanetScale |
+| CLI | Zero-dep Node (`node:util` parseArgs + fetch) | sade, commander |
+| Package manager | pnpm (monorepo) + Turborepo | npm workspaces |
+| Deployment | Local single-user (`pnpm start:local`) | Vercel + Postgres |
 
 ---
 
@@ -23,14 +28,17 @@ Key technical decisions, trade-offs, and architectural reasoning. Intended for t
 promptops-tool/
   app/
     apps/
-      api/          Hono API server
-      web/          Next.js management console
+      api/          Hono API server (SQLite)
+      web/          Next.js management console + Builder wizard
+      cli/          promptops CLI
     packages/
-      types/        Shared TypeScript types (PromptAsset, PromptVersion, TestSuite...)
-      db/           Drizzle schema + client
+      domain/       Shared Zod schemas / types
+      diff/         Pure line + structured diff (used by CLI and web)
+      builder/      Pure spec → prompt compiler, test-case gen, eval parser
 ```
 
-`packages/types` is the contract between API and web. Both import from it. No code generation step required — changes to the schema propagate immediately across apps.
+`packages/domain` is the type contract. `packages/diff` and `packages/builder` hold pure,
+deterministic logic consumed by both API and CLI/web — no I/O, fully unit-tested.
 
 ---
 
@@ -86,9 +94,15 @@ type VariableSchema = {
 - Schema is TypeScript code, not a separate DSL. `drizzle-kit generate` is only needed for migrations, not for type inference.
 - No `prisma generate` to run in CI before the TypeScript compiler sees the types.
 - Query builder is more explicit about what SQL is being generated — important for a team that cares about N+1 avoidance.
-- `drizzle-kit push` for local development: schema changes apply immediately without a migration file.
+- `drizzle-kit generate` produces SQLite migrations applied on boot via the better-sqlite3 migrator.
 
-**Trade-off:** Prisma has better ecosystem documentation, more community examples, and a polished Studio UI. For a new project with a small, stable schema, Drizzle's tradeoffs favor development velocity.
+**Dialect note:** schema uses `drizzle-orm/sqlite-core` — `text`/`integer` columns, JSON stored as
+`text({ mode: 'json' })`, dates as `integer({ mode: 'timestamp_ms' })`, UUIDs as `text` +
+`randomUUID()`, enums as `text({ enum: [...] })`. No `pgEnum`/`jsonb`/`timestamptz`. Queries use
+`new Date()` (not `sql\`now()\``) and `db.get`/query builder (no `db.execute`).
+
+**Trade-off:** Prisma has better ecosystem docs and a polished Studio. For a small, stable,
+single-user local schema, Drizzle + SQLite keeps install light (no DB server) and types first-class.
 
 ---
 
@@ -120,16 +134,17 @@ app.post(
 
 **Decision:** `audit_log` table is insert-only. No update or delete operations. Every promote, archive, and rollback event is an immutable row.
 
-**Schema:**
+**Schema (SQLite):**
 ```typescript
-export const auditLog = pgTable("audit_log", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  asset_id: text("asset_id").notNull(),
-  version_id: uuid("version_id"),
-  event: text("event").notNull(),  // "version.created" | "version.promoted" | "version.archived"
+export const auditLog = sqliteTable("audit_log", {
+  id: text("id").primaryKey().$defaultFn(() => randomUUID()),
   actor: text("actor").notNull(),
-  metadata: jsonb("metadata"),
-  created_at: timestamp("created_at").defaultNow().notNull(),
+  event_type: text("event_type").notNull(), // version.created | version.promoted | eval.imported | ...
+  asset_id: text("asset_id"),
+  version_id: text("version_id"),
+  payload: text("payload", { mode: "json" }).notNull(),
+  payload_hash: text("payload_hash").notNull(),
+  occurred_at: integer("occurred_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
 });
 ```
 
@@ -150,28 +165,45 @@ export const auditLog = pgTable("audit_log", {
 
 ---
 
-### 7. Database connection in Docker for local development
+### 7. Local-mode auth + SQLite file location
 
-**Problem encountered:** PostgreSQL container had no host port binding initially. `DATABASE_URL=postgres://...@localhost:5432` failed — localhost inside the Next.js process ≠ localhost inside the container.
+**Decision:** `PROMPTOPS_LOCAL=1` (default) bypasses Bearer auth, sets `actor = "local"`. DB is a
+single SQLite file at `~/.promptops/promptops.db` (override `PROMPTOPS_DB_PATH`), auto-created on
+boot with `journal_mode=WAL` and `foreign_keys=ON`. Token is only required when `PROMPTOPS_LOCAL=0`.
 
-**Fix:** Connected the container to the bridge network, obtained the bridge IP (`172.17.0.2`). Updated `DATABASE_URL` to use the bridge IP.
+**Gotcha — IPv6 localhost:** Node's `fetch` resolves `localhost` to `::1` first; the API binds
+IPv4. Server-side web fetches to `http://localhost:3013` failed with `ECONNREFUSED`. Fix: use
+`http://127.0.0.1:3013` everywhere the web/CLI talks to the API. Shell `curl` was unaffected
+(uses IPv4), which masked the issue initially.
 
-**Lesson for production:** Use Docker Compose with a named service (`db`) and reference it as `postgres://...@db:5432`. The service name resolves inside the Docker network. No IP address required. For local-only dev without Docker Compose, use `pg_isready -h localhost` to confirm port binding before starting the app.
+**Gotcha — stale dist:** `pnpm start` runs `node dist/server.js`; after the Postgres→SQLite swap a
+stale `dist` still imported `pg` → `ERR_MODULE_NOT_FOUND` at boot. Always rebuild before `start`.
+Dev (`tsx watch`) recompiles from source so was unaffected. `pnpm start:local` uses dev.
 
 ---
 
 ## API Route Summary
 
+All `/api/v0/*` routes run through auth middleware (bypassed in local mode). Diff is computed
+client-side via `@promptops/diff` — there is no diff API route.
+
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/health` | Health check |
-| GET | `/assets` | List all assets |
-| POST | `/assets` | Create asset |
-| GET | `/assets/:id` | Get asset + versions |
-| POST | `/assets/:id/versions` | Create version |
-| POST | `/assets/:id/versions/:vid/promote` | Promote version |
-| POST | `/assets/:id/versions/:vid/render` | Render with variables |
-| GET | `/assets/:id/diff` | Diff two versions |
+| GET | `/health` | DB connectivity check (public) |
+| GET / POST | `/api/v0/assets` | List / create asset |
+| GET / PATCH | `/api/v0/assets/:id` | Get / update asset |
+| GET / POST | `/api/v0/assets/:id/versions` | List / create version |
+| GET | `/api/v0/assets/:id/active` | Active version (agent-friendly) |
+| POST | `/api/v0/assets/:id/versions/:vid/promote` | Promote draft → active |
+| POST | `/api/v0/assets/:id/versions/:vid/archive` | Archive a version |
+| POST | `/api/v0/assets/:id/versions/:vid/render` | Render template (no LLM) |
+| POST | `/api/v0/assets/:id/rollback` | Restore previous active |
+| GET | `/api/v0/assets/:id/audit` · `/stats` | Audit log · stats |
+| PUT / GET | `/api/v0/assets/:id/builder-spec` | Save / get builder spec |
+| POST | `/api/v0/assets/:id/compile` | Compile spec → prompt body |
+| GET / POST | `/api/v0/assets/:id/test-cases` | List / create test case |
+| POST | `/api/v0/assets/:id/test-cases/generate` | Generate baseline cases |
+| POST / GET | `/api/v0/assets/:id/eval-import` · `eval-imports` | Import / list eval results |
 
 ---
 

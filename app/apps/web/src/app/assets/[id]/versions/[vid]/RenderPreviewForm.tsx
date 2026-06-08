@@ -1,7 +1,7 @@
 'use client';
 
-import { useActionState, useState } from 'react';
 import type { RenderResult } from '@/lib/api';
+import { useActionState, useState } from 'react';
 import { renderPreviewAction } from './actions';
 
 interface Props {
@@ -34,17 +34,20 @@ export function RenderPreviewForm({ assetId, versionId }: Props) {
   }
 
   const manualInputsJson = JSON.stringify(
-    Object.fromEntries(manualInputs.filter((r) => r.key.trim()).map((r) => [r.key.trim(), r.value])),
+    Object.fromEntries(
+      manualInputs.filter((r) => r.key.trim()).map((r) => [r.key.trim(), r.value]),
+    ),
   );
 
   const INPUT_CLS =
-    'bg-gray-900 border border-gray-700 text-gray-200 text-xs rounded px-3 py-2 placeholder-gray-600 focus:outline-none focus:border-gray-500 transition-colors';
+    'bg-surface border border-border text-text text-xs rounded-md px-3 py-2 placeholder:text-muted/60 focus:outline-none focus:border-accent/50 transition-colors';
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-gray-300">Render Preview</h2>
-      <p className="text-gray-600 text-xs">
-        Template substitution only — no LLM call. PromptOps stores prompt versions. AI Eval scores model outputs.
+      <h2 className="text-sm font-semibold text-text">Render Preview</h2>
+      <p className="text-muted text-xs">
+        Template substitution only — no LLM call. PromptOps stores prompt versions. AI Eval scores
+        model outputs.
       </p>
 
       <form action={action} className="space-y-4">
@@ -53,13 +56,13 @@ export function RenderPreviewForm({ assetId, versionId }: Props) {
           {manualInputs.map((row, i) => (
             <div key={i} className="flex gap-2">
               <input
-                className={INPUT_CLS + ' flex-1'}
+                className={`${INPUT_CLS} flex-1`}
                 placeholder="variable_name"
                 value={row.key}
                 onChange={(e) => setManualRow(i, 'key', e.target.value)}
               />
               <input
-                className={INPUT_CLS + ' flex-[2]'}
+                className={`${INPUT_CLS} flex-[2]`}
                 placeholder="value"
                 value={row.value}
                 onChange={(e) => setManualRow(i, 'value', e.target.value)}
@@ -67,7 +70,7 @@ export function RenderPreviewForm({ assetId, versionId }: Props) {
               <button
                 type="button"
                 onClick={() => removeManualRow(i)}
-                className="text-gray-600 hover:text-red-400 text-xs px-1"
+                className="text-muted hover:text-danger text-xs px-1"
               >
                 x
               </button>
@@ -76,7 +79,7 @@ export function RenderPreviewForm({ assetId, versionId }: Props) {
           <button
             type="button"
             onClick={addManualRow}
-            className="text-xs text-gray-500 hover:text-gray-300"
+            className="text-xs text-muted hover:text-text"
           >
             + Add variable
           </button>
@@ -86,33 +89,33 @@ export function RenderPreviewForm({ assetId, versionId }: Props) {
         <button
           type="submit"
           disabled={pending}
-          className="px-4 py-2 bg-indigo-700 hover:bg-indigo-600 disabled:bg-gray-800 disabled:text-gray-600 text-white text-xs rounded transition-colors"
+          className="px-4 py-2 bg-accent hover:opacity-90 text-accent-fg shadow-sm disabled:opacity-50 text-xs rounded-md transition-colors"
         >
           {pending ? 'Rendering…' : 'Render Preview'}
         </button>
       </form>
 
       {error && (
-        <div className="bg-red-950 border border-red-800 text-red-300 px-3 py-2 rounded text-xs">
+        <div className="bg-danger/10 border border-danger/30 text-danger px-3 py-2 rounded-md text-xs">
           {error}
         </div>
       )}
 
       {result && (
-        <div className="space-y-4 border-t border-gray-800 pt-4">
+        <div className="space-y-4 border-t border-border pt-4">
           {/* Rendered prompts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {result.rendered_system !== null && (
-              <div className="bg-gray-900 border border-gray-800 rounded-lg px-4 py-3">
-                <p className="text-gray-500 text-xs mb-2">System prompt rendered</p>
-                <pre className="text-gray-300 text-xs font-mono whitespace-pre-wrap leading-relaxed">
-                  {result.rendered_system || <span className="text-gray-600">(empty)</span>}
+              <div className="bg-surface-2 border border-border rounded-lg px-4 py-3">
+                <p className="text-muted text-xs mb-2">System prompt rendered</p>
+                <pre className="text-text text-xs font-mono whitespace-pre-wrap leading-relaxed">
+                  {result.rendered_system || <span className="text-muted">(empty)</span>}
                 </pre>
               </div>
             )}
-            <div className="bg-gray-900 border border-gray-800 rounded-lg px-4 py-3">
-              <p className="text-gray-500 text-xs mb-2">User prompt rendered</p>
-              <pre className="text-gray-300 text-xs font-mono whitespace-pre-wrap leading-relaxed">
+            <div className="bg-surface-2 border border-border rounded-lg px-4 py-3">
+              <p className="text-muted text-xs mb-2">User prompt rendered</p>
+              <pre className="text-text text-xs font-mono whitespace-pre-wrap leading-relaxed">
                 {result.rendered_user}
               </pre>
             </div>
@@ -123,12 +126,12 @@ export function RenderPreviewForm({ assetId, versionId }: Props) {
             <button
               type="button"
               onClick={() => setShowRawInputs((v) => !v)}
-              className="text-xs text-gray-500 hover:text-gray-300"
+              className="text-xs text-muted hover:text-text"
             >
               {showRawInputs ? 'v' : '>'} Raw inputs JSON
             </button>
             {showRawInputs && (
-              <pre className="mt-2 text-gray-400 text-xs bg-gray-950 rounded p-3 overflow-x-auto">
+              <pre className="mt-2 text-text text-xs bg-surface-2 rounded-md p-3 overflow-x-auto font-mono">
                 {JSON.stringify(result.inputs, null, 2)}
               </pre>
             )}
@@ -136,24 +139,25 @@ export function RenderPreviewForm({ assetId, versionId }: Props) {
 
           {/* Diagnostics */}
           {result.unresolved_variables.length > 0 && (
-            <div className="bg-red-950 border border-red-800 rounded px-3 py-2">
-              <p className="text-red-300 text-xs font-medium mb-1">Unresolved variables</p>
-              <p className="text-red-400 text-xs">
-                {result.unresolved_variables.map((v) => `{{${v}}}`).join(', ')} — not found in inputs
+            <div className="bg-danger/10 border border-danger/30 rounded-md px-3 py-2">
+              <p className="text-danger text-xs font-medium mb-1">Unresolved variables</p>
+              <p className="text-danger text-xs">
+                {result.unresolved_variables.map((v) => `{{${v}}}`).join(', ')} — not found in
+                inputs
               </p>
             </div>
           )}
 
           {result.unused_inputs.length > 0 && (
-            <div className="bg-gray-900 border border-gray-700 rounded px-3 py-2">
-              <p className="text-gray-400 text-xs font-medium mb-1">Unused inputs</p>
-              <p className="text-gray-500 text-xs">
+            <div className="bg-surface border border-border rounded-md px-3 py-2">
+              <p className="text-muted text-xs font-medium mb-1">Unused inputs</p>
+              <p className="text-muted text-xs">
                 {result.unused_inputs.join(', ')} — not referenced in template
               </p>
             </div>
           )}
 
-          <p className="text-gray-600 text-xs font-mono">hash: {result.rendered_hash.slice(0, 16)}…</p>
+          <p className="text-muted text-xs font-mono">hash: {result.rendered_hash.slice(0, 16)}…</p>
         </div>
       )}
     </section>

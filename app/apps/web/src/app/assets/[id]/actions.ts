@@ -1,6 +1,6 @@
 'use server';
 
-import { api, type Asset } from '@/lib/api';
+import { type Asset, api } from '@/lib/api';
 import { revalidatePath } from 'next/cache';
 
 export async function updateAssetAction(

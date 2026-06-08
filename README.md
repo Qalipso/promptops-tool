@@ -1,89 +1,103 @@
-# PromptOps — Prompt Testing & Versioning Tool
+# PromptOps
 
-> Prompts are production assets. Treat them like code, not like notes in a Notion page.
+> Prompts are production assets. Version them, test them, diff them, and gate releases — like code, not notes in a Notion page.
 
-PromptOps is a documentation-first product artifact for managing the full lifecycle of LLM prompts inside real AI products — from draft, through versioning, test suites, output diffing, regression checks, and release decisions.
+[![CI](https://github.com/Qalipso/promptops-tool/actions/workflows/promptops-ci.yml/badge.svg)](https://github.com/Qalipso/promptops-tool/actions/workflows/promptops-ci.yml)
+&nbsp;109+ tests &nbsp;·&nbsp; TypeScript &nbsp;·&nbsp; local-first
 
-This repository is the **product brief, behavior spec, and architecture documentation** for the tool. It is intentionally docs-first: the goal is to demonstrate production AI thinking, not to ship another generic prompt playground.
+PromptOps is a **local-first prompt operations tool**. It treats every prompt as a versioned, testable, releasable asset — with a registry, semantic versioning, diffing, an append-only audit log, a CLI, and a guided **agent builder**. No cloud, no database server, no LLM calls: clone, `pnpm start:local`, and own your prompt lifecycle on your machine.
+
+![Dashboard](app/docs/screenshots/dashboard-dark.png)
 
 ---
 
-## What PromptOps Is
+## Why
 
-A prompt operations layer for teams running LLM features in production. It treats every prompt as a versioned, testable, releasable asset with:
+In production AI, the prompt is often the **single point of failure**. A one-line system-prompt edit can silently break classification accuracy, tone, or JSON structure — and the regression shows up in support tickets, not a test run. PromptOps applies engineering discipline to prompts: version control, diffs, an explicit release gate, and a full audit trail.
 
-- A stable identity (prompt ID + semantic version)
-- Typed variables and a defined input contract
-- A suite of test cases with expected behaviors
-- A runner that executes those tests against any version
-- Side-by-side output comparison between versions
-- Regression detection before a new version is promoted
-- An explicit release decision step with audit trail
+## Features
 
-## What PromptOps Is Not
+- **Registry + semantic versioning** — stable asset IDs, content-hash version identity, draft → active → previous lifecycle.
+- **Diff** — line + structured diff between any two versions (pure, dependency-free LCS).
+- **Render** — template `{{variable}}` substitution with unresolved/unused detection. No LLM call.
+- **Append-only audit log** — every create/promote/archive/rollback/eval event is immutable evidence.
+- **Agent Builder** — guided 8-step wizard (Brief → Behavior → Rules → Tools → Preview → Test Cases → Eval → Release) that compiles a spec into a versioned prompt. Shows a diff-vs-active before you promote.
+- **CLI** — zero-dependency `promptops` for the whole lifecycle, plus git-friendly YAML export/import.
+- **Eval ingest** — import an eval results `.txt` from an external evaluator; PromptOps stores and displays, it does not run evals.
 
-- **Not a general LLM evaluation framework.** It does not benchmark models against each other or compute LLM leaderboard scores.
-- **Not an agent builder.** No chains, no graphs, no tool-use orchestration.
-- **Not a fine-tuning platform.** It manages prompts, not weights.
-- **Not a generic prompt playground.** Playgrounds optimize for exploration. PromptOps optimizes for safe iteration on prompts that are already in production.
+## Quick start
 
-## Why This Matters
+```bash
+cd projects/promptops-tool/app
+pnpm install
+pnpm start:local        # migrate + seed + API :3013 + web :3014
+```
 
-In production AI products, the prompt is often the **single point of failure**. A one-line edit to a system prompt can silently break classification accuracy, tone, JSON structure, or downstream parsing. Most teams discover the regression in support tickets, not in a test run.
+Open http://localhost:3014. SQLite auto-creates at `~/.promptops/promptops.db`. Local mode bypasses auth (`actor = local`).
 
-PromptOps applies the same discipline to prompts that engineering applies to code: version control, test suites, diffs, regression checks, and an explicit release gate.
+## Screenshots
 
-## Portfolio Value
-
-This artifact demonstrates:
-
-- **Production AI thinking** — prompt lifecycle, versioning, regression discipline
-- **Product framing** — clear JTBD, MVP scope, non-goals, success metrics
-- **Systems design** — layered architecture, audit log, deterministic test runner
-- **Technical PM discipline** — behavior spec, acceptance criteria, roadmap split by MVP/V1/V2
-- **Practical empathy for builders** — every doc page reads like internal documentation a real team would actually use
-
-It positions me as someone who can own AI product surfaces end-to-end: spec the problem, design the system, write the docs, and define what "shippable" means.
-
-## Example Prompts This Tool Would Manage
-
-Real prompts from my own AI projects that benefit from PromptOps discipline:
-
-| Prompt Asset | Source Project | Why it needs PromptOps |
+| Asset detail | Agent builder — preview | Builder — release diff |
 |---|---|---|
-| **Shadow Daily Reflection Classifier** | Shadow | Classifies user entries into life areas. Schema drift breaks downstream charts. |
-| **Shadow Weekly Insight Generator** | Shadow | Long-form synthesis over a week of entries. Tone and structure regress easily. |
-| **RAG Context Builder** | Shadow | Assembles memory blocks from pgvector matches. Format changes ripple into every other prompt. |
-| **Small Business Booking Assistant** | Area Mosa | WhatsApp booking agent. Wrong date handling = lost bookings. |
-| **Lead Qualification Assistant** | Sales tooling | Scores inbound leads. Score inflation/deflation is invisible without regression checks. |
-| **AI Evaluation Report Generator** | Internal | Generates structured eval reports. Output format must stay stable for parsing. |
+| ![Asset](app/docs/screenshots/asset-detail-dark.png) | ![Preview](app/docs/screenshots/builder-preview-dark.png) | ![Release](app/docs/screenshots/builder-release-dark.png) |
 
-Each of these would live in PromptOps as a versioned asset with its own test suite.
+Light + dark themes included. Regenerate with `pnpm capture` (needs `start:local` running).
 
-## Repository Map
+## CLI
 
-```
-promptops-tool/
-├── README.md                    # this file
-├── product-brief.md             # problem, users, JTBD, MVP, metrics
-├── behavior-spec.md             # what the system does / does not do
-├── architecture.md              # system layers + Mermaid diagram
-├── roadmap.md                   # MVP / V1 / V2 / future
-├── acceptance-criteria.md       # what "done" means for each layer
-├── docs/
-│   ├── prompt-lifecycle.md
-│   ├── versioning-strategy.md
-│   ├── variable-design.md
-│   ├── test-case-design.md
-│   ├── prompt-diff.md
-│   ├── regression-checks.md
-│   ├── release-management.md
-│   └── production-ai-thinking.md
-└── diagrams/
-    ├── prompt-lifecycle.md
-    ├── version-comparison-flow.md
-    ├── regression-flow.md
-    └── release-decision-flow.md
+```bash
+pnpm cli list                                   # all assets
+pnpm cli show <asset>                            # detail + versions
+pnpm cli version new <asset> <ver> -m "msg"      # draft (opens $EDITOR)
+pnpm cli promote <asset> <ver>                   # draft → active
+pnpm cli render <asset> <ver> -i name=Sam        # template render, no LLM
+pnpm cli diff <asset> <verA> <verB>              # body + model-config diff
+pnpm cli rollback <asset> --reason "..."         # restore previous active
+pnpm cli export <asset> --out asset.yaml         # git-friendly export
+pnpm cli import asset.yaml                        # recreate from YAML
 ```
 
-Start with `product-brief.md` for the problem framing, then `behavior-spec.md` for the system contract, then `architecture.md` for the design.
+Or build a global binary: `pnpm --filter @promptops/cli build && node apps/cli/dist/main.js list`.
+
+## Architecture
+
+```
+app/
+├── apps/
+│   ├── api/      Hono + Drizzle + SQLite (better-sqlite3)
+│   ├── web/      Next.js 15 — console + Agent Builder (dark/light)
+│   └── cli/      zero-dep Node CLI (parseArgs + fetch)
+└── packages/
+    ├── domain/   Zod schemas / shared types
+    ├── diff/     pure line + structured diff (8 tests)
+    └── builder/  pure spec→prompt compiler, test-gen, eval parser (11 tests)
+```
+
+Pure logic lives in `packages/*` (no I/O, fully unit-tested). API is layered routes → services → repos → schema. Engine details + decisions in [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md).
+
+## Tests & checks
+
+```bash
+pnpm -r lint        # biome
+pnpm -r typecheck   # tsc --noEmit
+pnpm -r test        # vitest — 109+ tests
+```
+
+CI (GitHub Actions) runs lint → typecheck → test → coverage gate (diff/builder ≥80%) → build on every push.
+
+## Live demo (read-only)
+
+A read-only demo (sample data, write actions disabled) can be deployed to Vercel:
+
+- Root directory: `projects/promptops-tool/app/apps/web`
+- Env: `DEMO_MODE=true`, `NEXT_PUBLIC_DEMO_MODE=true`
+- `vercel.json` is preconfigured (`pnpm --filter=@promptops/web... build`).
+
+```bash
+cd app/apps/web && vercel    # deploy with the env vars above
+```
+
+## Docs
+
+Spec + design docs (kept in sync with the code):
+[`product-brief.md`](product-brief.md) · [`behavior-spec.md`](behavior-spec.md) · [`architecture.md`](architecture.md) · [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) · [`CASE-STUDY.md`](CASE-STUDY.md) · [`app/README.md`](app/README.md)

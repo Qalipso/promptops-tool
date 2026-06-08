@@ -15,10 +15,14 @@
     "typecheck": "turbo run typecheck",
     "db:generate": "pnpm --filter @promptops/api db:generate",
     "db:migrate": "pnpm --filter @promptops/api db:migrate",
-    "db:seed": "pnpm --filter @promptops/api db:seed"
+    "db:seed": "pnpm --filter @promptops/api db:seed",
+    "start:local": "pnpm db:migrate && pnpm db:seed && turbo run dev --parallel --filter=@promptops/api --filter=@promptops/web",
+    "cli": "pnpm --filter @promptops/cli dev --",
+    "capture": "node scripts/capture-screens.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@playwright/test": "^1.60.0",
     "turbo": "^2.3.0",
     "typescript": "^5.7.0"
   }

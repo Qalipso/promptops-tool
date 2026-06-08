@@ -31,6 +31,7 @@ export function extractVariables(template: string): string[] {
   const seen = new Set<string>();
   const re = new RegExp(VAR_RE.source, VAR_RE.flags);
   let match: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: idiomatic regex exec loop
   while ((match = re.exec(template)) !== null) {
     seen.add((match[1] as string).toLowerCase());
   }
@@ -45,6 +46,7 @@ export function findUnresolved(rendered: string): string[] {
   const seen = new Set<string>();
   const re = new RegExp(VAR_RE.source, VAR_RE.flags);
   let match: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: idiomatic regex exec loop
   while ((match = re.exec(rendered)) !== null) {
     seen.add((match[1] as string).toLowerCase());
   }

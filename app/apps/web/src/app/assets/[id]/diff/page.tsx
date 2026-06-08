@@ -1,6 +1,6 @@
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { api } from '@/lib/api';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { DiffView } from './DiffView';
 import { VersionPicker } from './VersionPicker';
 
@@ -22,12 +22,16 @@ export default async function DiffPage({ params, searchParams }: Props) {
   if (!asset) notFound();
 
   const breadcrumb = (
-    <nav className="text-xs text-zinc-500 mb-6 flex gap-1 items-center">
-      <Link href="/" className="hover:text-zinc-300">assets</Link>
+    <nav className="text-xs text-muted mb-6 flex gap-1 items-center">
+      <Link href="/" className="hover:text-text">
+        assets
+      </Link>
       <span>/</span>
-      <Link href={`/assets/${id}`} className="hover:text-zinc-300">{id}</Link>
+      <Link href={`/assets/${id}`} className="hover:text-text">
+        {id}
+      </Link>
       <span>/</span>
-      <span className="text-zinc-300">diff</span>
+      <span className="text-text">diff</span>
     </nav>
   );
 
@@ -36,9 +40,9 @@ export default async function DiffPage({ params, searchParams }: Props) {
     return (
       <main className="max-w-4xl mx-auto px-6 py-10">
         {breadcrumb}
-        <h1 className="text-xl font-semibold text-zinc-100 mb-6">Compare versions</h1>
+        <h1 className="text-xl font-semibold text-text mb-6">Compare versions</h1>
         {versions.length < 1 ? (
-          <p className="text-zinc-500 text-sm">No versions yet.</p>
+          <p className="text-muted text-sm">No versions yet.</p>
         ) : (
           <VersionPicker assetId={id} versions={versions} />
         )}
@@ -56,10 +60,10 @@ export default async function DiffPage({ params, searchParams }: Props) {
     return (
       <main className="max-w-4xl mx-auto px-6 py-10">
         {breadcrumb}
-        <div className="rounded border border-red-700/40 bg-red-900/20 px-5 py-4 text-red-300 text-sm mb-4">
+        <div className="rounded-md border border-danger/30 bg-danger/10 px-5 py-4 text-danger text-sm mb-4">
           One or both versions not found.
         </div>
-        <Link href={`/assets/${id}/diff`} className="text-indigo-400 hover:text-indigo-300 text-sm">
+        <Link href={`/assets/${id}/diff`} className="text-accent hover:opacity-80 text-sm">
           Back to version picker
         </Link>
       </main>
@@ -95,30 +99,25 @@ export default async function DiffPage({ params, searchParams }: Props) {
       {breadcrumb}
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-zinc-100">
-          Comparing{' '}
-          <span className="font-mono text-indigo-400">v{v1.version}</span>
-          {' '}→{' '}
-          <span className="font-mono text-indigo-400">v{v2.version}</span>
+        <h1 className="text-xl font-semibold text-text">
+          Comparing <span className="font-mono text-accent">v{v1.version}</span> →{' '}
+          <span className="font-mono text-accent">v{v2.version}</span>
         </h1>
-        <Link
-          href={`/assets/${id}/diff`}
-          className="text-xs text-zinc-500 hover:text-zinc-300"
-        >
+        <Link href={`/assets/${id}/diff`} className="text-xs text-muted hover:text-text">
           Change versions
         </Link>
       </div>
 
       {/* Version metadata strip */}
-      <div className="grid grid-cols-2 gap-1 mb-8 text-xs font-mono text-zinc-500">
-        <div className="bg-zinc-900 rounded-tl rounded-bl px-4 py-2 border border-zinc-800">
-          <span className="text-zinc-300">{v1.version}</span>
+      <div className="grid grid-cols-2 gap-1 mb-8 text-xs font-mono text-muted">
+        <div className="bg-surface-2 rounded-tl-md rounded-bl-md px-4 py-2 border border-border">
+          <span className="text-text">{v1.version}</span>
           {' · '}
           <span className={stateCls(v1.state)}>{v1.state}</span>
           {' · '}etag {v1.etag}
         </div>
-        <div className="bg-zinc-900 rounded-tr rounded-br px-4 py-2 border border-zinc-800">
-          <span className="text-zinc-300">{v2.version}</span>
+        <div className="bg-surface-2 rounded-tr-md rounded-br-md px-4 py-2 border border-border">
+          <span className="text-text">{v2.version}</span>
           {' · '}
           <span className={stateCls(v2.state)}>{v2.state}</span>
           {' · '}etag {v2.etag}
@@ -132,10 +131,10 @@ export default async function DiffPage({ params, searchParams }: Props) {
 
 function stateCls(state: string) {
   const map: Record<string, string> = {
-    active: 'text-green-400',
-    draft: 'text-blue-400',
-    previous: 'text-yellow-400',
-    archived: 'text-zinc-600',
+    active: 'text-success',
+    draft: 'text-accent',
+    previous: 'text-warning',
+    archived: 'text-muted',
   };
-  return map[state] ?? 'text-zinc-400';
+  return map[state] ?? 'text-muted';
 }

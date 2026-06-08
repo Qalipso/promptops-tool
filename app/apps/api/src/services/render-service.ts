@@ -7,9 +7,9 @@
 import { createHash } from 'node:crypto';
 import { db } from '../db/client.js';
 import { renderValidations } from '../db/schema.js';
-import { interpolate, extractVariables, findUnresolved, findUnused } from './template-engine.js';
-import { getVersion } from './version-repo.js';
 import { writeAudit } from './audit.js';
+import { extractVariables, findUnresolved, findUnused, interpolate } from './template-engine.js';
+import { getVersion } from './version-repo.js';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -88,14 +88,11 @@ export async function renderVersion(opts: {
       .insert(renderValidations)
       .values({
         version_id: opts.version_id,
-        fixture_id: null,
         source: 'manual',
         inputs_snapshot: mergedInputs,
         rendered_system: rendered_system ?? null,
         rendered_user,
         rendered_hash,
-        checks_config: [],
-        render_check_results: [],
         unresolved_variables,
         unused_inputs,
         created_by: opts.actor,
@@ -108,7 +105,7 @@ export async function renderVersion(opts: {
       asset_id: version.asset_id,
       version_id: opts.version_id,
       payload: {
-        id: saved!.id,
+        id: saved?.id,
         rendered_hash,
         unresolved_count: unresolved_variables.length,
       },

@@ -4,7 +4,7 @@
  *
  * Run: pnpm test (vitest)
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
 
 // ── Mock DB ────────────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@ vi.mock('../db/client.js', () => ({
       }),
       // Bare select().from() → returns rows
     }),
-    execute: vi.fn().mockResolvedValue([]),
+    get: vi.fn().mockReturnValue({ '1': 1 }),
   },
 }));
 
@@ -27,11 +27,10 @@ vi.mock('../lib/env.js', () => ({
     NODE_ENV: 'test',
     PORT: 3001,
     LOG_LEVEL: 'silent',
-    DATABASE_URL: 'postgres://test',
+    // Auth ON (local mode off) so the 401 assertions below stay meaningful.
+    PROMPTOPS_LOCAL: false,
+    PROMPTOPS_DB_PATH: ':memory:',
     PROMPTOPS_API_TOKEN: 'test-token-abcdef0123456789',
-    OPENAI_API_KEY: undefined,
-    MAX_USD_PER_RUN: 1,
-    MAX_USD_PER_DAY: 5,
   },
 }));
 
@@ -50,8 +49,8 @@ describe('GET /health', () => {
     const app = buildApp();
     const res = await app.request('/health');
     expect(res.status).toBe(200);
-    const body = await res.json() as Record<string, unknown>;
-    expect(body['status']).toBe('ok');
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body.status).toBe('ok');
   });
 });
 
@@ -65,7 +64,7 @@ describe('GET /api/v0/assets (authenticated)', () => {
   it('rejects missing auth → 401', async () => {
     const res = await app.request('/api/v0/assets');
     expect(res.status).toBe(401);
-    const body = await res.json() as { success: boolean; error: { code: string } };
+    const body = (await res.json()) as { success: boolean; error: { code: string } };
     expect(body.success).toBe(false);
     expect(body.error.code).toBe('unauthorized');
   });
@@ -88,7 +87,7 @@ describe('GET /api/v0/assets (authenticated)', () => {
       headers: { Authorization: 'Bearer test-token-abcdef0123456789' },
     });
     expect(res.status).toBe(200);
-    const body = await res.json() as { success: boolean; data: unknown[] };
+    const body = (await res.json()) as { success: boolean; data: unknown[] };
     expect(body.success).toBe(true);
     expect(Array.isArray(body.data)).toBe(true);
   });

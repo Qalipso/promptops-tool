@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-const API_URL = process.env.PROMPTOPS_API_URL ?? 'http://localhost:3013';
+const API_URL = process.env.PROMPTOPS_API_URL ?? 'http://127.0.0.1:3013';
 const TOKEN = process.env.PROMPTOPS_API_TOKEN ?? '';
 
 async function apiPost(path: string, body: unknown) {
@@ -38,7 +38,6 @@ export async function createVersionAction(
   const system = (formData.get('system') as string).trim();
   const user = (formData.get('user') as string).trim();
   const changelog = (formData.get('changelog') as string).trim();
-  const intent = (formData.get('intent') as string | null) ?? 'save';
   const vcRaw = formData.get('variable_contract_snapshot') as string | null;
 
   if (!version) return { error: 'Version string is required' };
@@ -69,20 +68,5 @@ export async function createVersionAction(
   }
 
   revalidatePath(`/assets/${assetId}`);
-
-  // "Save draft & run tests" — trigger a run immediately then go to run page
-  if (intent === 'save_run') {
-    try {
-      const runRes = await apiPost(
-        `/api/v0/assets/${assetId}/versions/${versionId}/runs`,
-        {},
-      );
-      const runId = (runRes.data as { id: string }).id;
-      redirect(`/assets/${encodeURIComponent(assetId)}/runs/${runId}`);
-    } catch {
-      // Run trigger failed — fall through to version page
-    }
-  }
-
   redirect(`/assets/${encodeURIComponent(assetId)}/versions/${versionId}`);
 }

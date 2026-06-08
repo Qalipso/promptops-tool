@@ -1,16 +1,5 @@
-import { api, type Asset } from '@/lib/api';
-
-function LifecycleBadge({ lc }: { lc: Asset['lifecycle'] }) {
-  const colors: Record<Asset['lifecycle'], string> = {
-    active: 'bg-emerald-900 text-emerald-300',
-    unregistered: 'bg-gray-800 text-gray-400',
-    deprecated: 'bg-yellow-900 text-yellow-300',
-    sunset: 'bg-red-900 text-red-300',
-  };
-  return (
-    <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors[lc]}`}>{lc}</span>
-  );
-}
+import { Badge, Button, Card, EmptyState, stateTone } from '@/components/ui';
+import { type Asset, api } from '@/lib/api';
 
 export default async function Dashboard() {
   let assets: Asset[] = [];
@@ -28,52 +17,79 @@ export default async function Dashboard() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-white">Assets</h1>
-        <span className="text-gray-500 text-xs">{assets.length} total</span>
+      <div className="flex items-baseline justify-between mb-4">
+        <h1 className="text-xl font-semibold text-text">Assets</h1>
+        <span className="text-muted text-xs">{assets.length} total</span>
       </div>
 
       {assets.length > 0 && (
-        <div className="flex gap-5 mb-6 text-xs border-b border-gray-800 pb-4">
-          <span className="text-emerald-400">{activeCount} active</span>
-          {deprecatedCount > 0 && <span className="text-yellow-400">{deprecatedCount} deprecated</span>}
-          <span className="text-gray-500">{totalVersions} versions</span>
+        <div className="flex gap-5 mb-6 text-xs border-b border-border pb-4">
+          <span className="text-success font-medium">{activeCount} active</span>
+          {deprecatedCount > 0 && (
+            <span className="text-warning">{deprecatedCount} deprecated</span>
+          )}
+          <span className="text-muted">{totalVersions} versions</span>
         </div>
       )}
 
       {error && (
-        <div className="bg-red-950 border border-red-800 text-red-300 px-4 py-3 rounded mb-4 text-xs">
+        <div className="rounded-md border border-danger/30 bg-danger/10 text-danger px-4 py-3 mb-4 text-xs">
           {error}
         </div>
       )}
 
       {assets.length === 0 && !error && (
-        <p className="text-gray-500 text-xs">No assets yet. Create one via the API.</p>
+        <EmptyState
+          title="No assets yet"
+          desc="Create a prompt asset, or build an agent end-to-end in the wizard."
+          action={
+            <div className="flex gap-2">
+              <a href="/assets/new">
+                <Button variant="secondary" size="sm">
+                  New asset
+                </Button>
+              </a>
+              <a href="/builder/new">
+                <Button size="sm">Open builder</Button>
+              </a>
+            </div>
+          }
+        />
       )}
 
-      <div className="space-y-2">
+      <div className="grid gap-3">
         {assets.map((asset) => (
           <a
             key={asset.id}
             href={`/assets/${encodeURIComponent(asset.id)}`}
-            className="block bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 hover:border-gray-600 transition-colors no-underline group"
+            className="no-underline group"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-white group-hover:text-indigo-300 transition-colors font-medium">
-                {asset.id}
-              </span>
-              <LifecycleBadge lc={asset.lifecycle} />
-            </div>
+            <Card hover className="px-4 py-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-text group-hover:text-accent transition-colors font-medium font-mono text-sm">
+                  {asset.id}
+                </span>
+                <Badge tone={stateTone(asset.lifecycle)}>{asset.lifecycle}</Badge>
+              </div>
 
-            {asset.description && (
-              <p className="text-gray-400 text-xs mt-1 truncate">{asset.description}</p>
-            )}
+              {asset.description && (
+                <p className="text-muted text-xs mt-1.5 truncate">{asset.description}</p>
+              )}
 
-            <div className="flex flex-wrap gap-4 mt-2 text-gray-600 text-xs">
-              <span>owner: {asset.owner}</span>
-              <span>{asset.stats?.version_count ?? 0} versions</span>
-              {asset.tags.length > 0 && <span>{asset.tags.join(', ')}</span>}
-            </div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-muted/80 text-xs">
+                <span>{asset.owner}</span>
+                <span>{asset.stats?.version_count ?? 0} versions</span>
+                {asset.tags.length > 0 && (
+                  <span className="flex gap-1.5">
+                    {asset.tags.map((t) => (
+                      <span key={t} className="text-accent/70">
+                        #{t}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </div>
+            </Card>
           </a>
         ))}
       </div>

@@ -1,0 +1,50 @@
+name: promptops-ci
+
+on:
+  push:
+    paths:
+      - 'app/**'
+      - '.github/workflows/promptops-ci.yml'
+  pull_request:
+    paths:
+      - 'app/**'
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm -r lint
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Test
+        run: pnpm -r test
+
+      - name: Coverage gate (core logic packages)
+        run: |
+          pnpm --filter @promptops/diff test -- --coverage
+          pnpm --filter @promptops/builder test -- --coverage
+
+      - name: Build
+        run: pnpm -r build

@@ -2,10 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens — soft-modern (Stripe/Notion) palette.
+ * Values are space-separated RGB channels so Tailwind can apply opacity:
+ *   bg-accent/10, text-muted/70, etc.
+ * Light = :root, dark = .dark on <html>.
+ */
+:root {
+  --bg: 250 250 251; /* app background */
+  --surface: 255 255 255; /* cards, panels */
+  --surface-2: 244 244 246; /* insets, code blocks, hovers */
+  --border: 229 229 234;
+  --text: 24 24 28;
+  --muted: 108 108 122;
+  --accent: 99 91 255; /* violet */
+  --accent-fg: 255 255 255;
+  --accent-soft: 238 236 255;
+  --success: 22 163 74;
+  --warning: 202 138 4;
+  --danger: 220 38 38;
+  --ring: 99 91 255;
+}
+
+.dark {
+  --bg: 13 13 16;
+  --surface: 22 22 27;
+  --surface-2: 30 30 37;
+  --border: 39 39 47;
+  --text: 237 237 240;
+  --muted: 150 150 163;
+  --accent: 139 124 248;
+  --accent-fg: 255 255 255;
+  --accent-soft: 31 28 54;
+  --success: 74 222 128;
+  --warning: 250 204 21;
+  --danger: 248 113 113;
+  --ring: 139 124 248;
+}
+
 body {
-  @apply bg-gray-950 text-gray-100 font-mono text-sm;
+  @apply bg-bg text-text font-sans antialiased;
 }
 
 a {
-  @apply text-indigo-400 hover:text-indigo-300 transition-colors;
+  @apply text-accent transition-colors;
+}
+
+/* Calmer scrollbars. */
+* {
+  scrollbar-color: rgb(var(--border)) transparent;
 }
