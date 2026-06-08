@@ -8,7 +8,10 @@ export default async function Dashboard() {
   try {
     assets = await api.assets();
   } catch (err) {
-    error = err instanceof Error ? err.message : 'Failed to load assets';
+    const raw = err instanceof Error ? err.message : String(err);
+    error = /fetch failed|ECONNREFUSED|ENOTFOUND|502|503|500/.test(raw)
+      ? "Can't reach the PromptOps API. Start it with `pnpm start:local` (API on :3013)."
+      : raw;
   }
 
   const activeCount = assets.filter((a) => a.lifecycle === 'active').length;

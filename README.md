@@ -35,6 +35,8 @@ pnpm start:local        # migrate + seed + API :3013 + web :3014
 
 Open http://localhost:3014. SQLite auto-creates at `~/.promptops/promptops.db`. Local mode bypasses auth (`actor = local`).
 
+**Troubleshooting:** the web talks to the API over `127.0.0.1:3013` (IPv4 — `localhost` resolves to IPv6 first and would refuse). If pages show "Can't reach the PromptOps API", the API isn't up — re-run `pnpm start:local`, or `pnpm --filter @promptops/api dev`. After a Postgres→SQLite-era checkout, run `pnpm --filter @promptops/api build` before `pnpm --filter @promptops/api start` (prod path reads `dist/`).
+
 ## Screenshots
 
 | Asset detail | Agent builder — preview | Builder — release diff |
@@ -55,6 +57,8 @@ pnpm cli diff <asset> <verA> <verB>              # body + model-config diff
 pnpm cli rollback <asset> --reason "..."         # restore previous active
 pnpm cli export <asset> --out asset.yaml         # git-friendly export
 pnpm cli import asset.yaml                        # recreate from YAML
+pnpm cli builder compile <asset>                 # compile builder spec → prompt
+pnpm cli builder release <asset> <ver>           # spec → version → promote
 ```
 
 Or build a global binary: `pnpm --filter @promptops/cli build && node apps/cli/dist/main.js list`.
